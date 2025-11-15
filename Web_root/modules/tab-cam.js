@@ -166,13 +166,9 @@ export function toggleCamStream(btn) {
     const encodedCam = encodeURIComponent(camName);
     const encodedAudio = encodeURIComponent(audioName);
 
-    streamView.src =
-      "/api/stream/cam?cam=" +
-      encodedCam +
-      "&audio=" +
-      encodedAudio +
-      "&t=" +
-      Date.now();
+    streamView.src = `/api/stream/cam?cam=${encodedCam}&audio=${encodedAudio}&t=${Date.now()}&clientId=${
+      store.CLIENT_ID
+    }`;
     streamView.alt = "Đang tải luồng...";
     btn.textContent = "⏹️ Tắt Stream Camera";
     btn.classList.add("btn-danger");

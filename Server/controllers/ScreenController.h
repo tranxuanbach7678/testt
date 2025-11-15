@@ -5,9 +5,6 @@
 #include <winsock2.h>
 #include <string>
 
-/**
- * @brief Xu ly cac API cho tab "Man hinh" (Chup, Stream)
- */
 class ScreenController
 {
 public:

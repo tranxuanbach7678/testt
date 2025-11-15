@@ -11,21 +11,51 @@
       <header><h1>Điều khiển máy tính từ xa</h1></header>
 
       <div class="tabs-scroll">
-        <div class="tabs">
-          <button class="tab-btn active" onclick="showTab('apps')">
+        <div class="tabs" onmouseleave="handleTabLeave()">
+          <button
+            class="tab-btn active"
+            onclick="showTab('apps')"
+            onmouseenter="handleTabHover(this)"
+          >
             🖥️ Ứng dụng
           </button>
-          <button class="tab-btn" onclick="showTab('procs')">
+          <button
+            class="tab-btn"
+            onclick="showTab('procs')"
+            onmouseenter="handleTabHover(this)"
+          >
             ⚙️ Tiến trình
           </button>
-          <button class="tab-btn" onclick="showTab('screen')">
+          <button
+            class="tab-btn"
+            onclick="showTab('screen')"
+            onmouseenter="handleTabHover(this)"
+          >
             📸 Màn hình
           </button>
-          <button class="tab-btn" onclick="showTab('keylog')">
+          <button
+            class="tab-btn"
+            onclick="showTab('keylog')"
+            onmouseenter="handleTabHover(this)"
+          >
             ⌨️ Bắt phím
           </button>
-          <button class="tab-btn" onclick="showTab('cam')">📹 Camera</button>
-          <button class="tab-btn" onclick="showTab('sys')">🔌 Hệ thống</button>
+          <button
+            class="tab-btn"
+            onclick="showTab('cam')"
+            onmouseenter="handleTabHover(this)"
+          >
+            📹 Camera
+          </button>
+          <button
+            class="tab-btn"
+            onclick="showTab('sys')"
+            onmouseenter="handleTabHover(this)"
+          >
+            🔌 Hệ thống
+          </button>
+
+          <div id="tab-slider"></div>
         </div>
       </div>
 
@@ -197,7 +227,7 @@
       </div>
       <div id="tab-cam" class="tab-content">
         <div class="card">
-          <h3>Quay Video (Ghi ra file)</h3>
+          <h3>Quay Video</h3>
           <div class="control-row" style="margin-bottom: 10px">
             <label for="camName" style="width: 100px">Camera:</label>
             <select id="camName" class="input-field"></select>
@@ -234,7 +264,7 @@
         </div>
 
         <div class="card">
-          <h3>📹 Livestream Camera (~10 FPS)</h3>
+          <h3>📹 Livestream Camera (~25 FPS)</h3>
           <p>Chọn thiết bị từ danh sách ở trên trước khi bấm Bật Stream.</p>
           <div class="control-row" style="justify-content: center">
             <button

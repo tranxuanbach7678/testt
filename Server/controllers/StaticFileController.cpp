@@ -59,6 +59,7 @@ void StaticFileController::handleFileRequest(SOCKET client, const string &path, 
 
     if (content.empty())
     {
+        // Su dung 'clientIP'
         logConsole(clientId, "File not found: " + effectivePath);
         sendFileResponse(client, "404 File Not Found", "text/plain", 404);
     }
@@ -67,13 +68,12 @@ void StaticFileController::handleFileRequest(SOCKET client, const string &path, 
         string contentType = getContentType(effectivePath);
         sendFileResponse(client, content, contentType, 200);
 
-        // Neu la file video, xoa no sau khi gui
         if (contentType == "video/mp4")
         {
             string fullPath = "./" + effectivePath;
             if (DeleteFileA(fullPath.c_str()))
             {
-                logConsole(clientId, "Da gui va xoa file: " + effectivePath);
+                // logConsole(clientId, "Da gui va xoa file: " + effectivePath);
             }
         }
     }

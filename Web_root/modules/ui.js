@@ -5,29 +5,64 @@ import { loadApps, renderRecents } from "./tab-apps.js";
 import { loadProcs } from "./tab-procs.js";
 import { loadDevices } from "./tab-cam.js";
 
+// --- MOI: Ham di chuyen thanh slider ---
+/**
+ * @brief Di chuyen thanh slider den vi tri cua mot nut tab
+ * @param {HTMLElement} targetButton Nut tab (dang active hoac dang duoc hover)
+ */
+function moveSlider(targetButton) {
+  const slider = document.getElementById("tab-slider");
+  if (!slider || !targetButton) return;
+
+  // Lay vi tri va kich thuoc cua nut
+  const left = targetButton.offsetLeft; // Vi tri 'left' so voi cha (.tabs)
+  const width = targetButton.offsetWidth; // Chieu rong cua nut
+
+  // Dat vi tri va chieu rong cho slider
+  slider.style.left = `${left}px`;
+  slider.style.width = `${width}px`;
+}
+
+// --- MOI: Xu ly khi rê chuột VÀO mot tab ---
+export function handleTabHover(targetButton) {
+  moveSlider(targetButton);
+}
+
+// --- MOI: Xu ly khi rê chuột RA KHOI vung tab ---
+export function handleTabLeave() {
+  // Tim nut dang 'active'
+  const activeButton = document.querySelector(".tab-btn.active");
+  if (activeButton) {
+    moveSlider(activeButton); // Tra slider ve vi tri cua nut active
+  }
+}
+
 /**
  * @brief Hien thi mot dong log trong o "Nhat ky thao tac"
  * @param {string} msg Noi dung log
  * @param {boolean} success Thanh cong (true) hay That bai (false)
  */
 export function logActionUI(msg, success) {
+  // ... (code cu, khong doi) ...
   const list = document.getElementById("actionLogList");
   if (list) {
     const i = document.createElement("div");
     i.className = "log-item " + (success ? "success" : "error");
     i.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> ${msg}`;
-    list.insertBefore(i, list.firstChild); // Them vao dau danh sach
+    list.insertBefore(i, list.firstChild);
   }
-  // Dong thoi gui log nay len server de server biet client da lam gi
-  api("/api/clientlog", { msg: (success ? "[OK] " : "[FAIL] ") + msg });
+  api("/api/clientlog", { msg: msg, success: success });
 }
 
 /**
- * @brief An/Hien o "Nhat ky thao tac"
+ * @brief An/Hien o "Nhat ky thao tac" voi hieu ung dong mo
  */
 export function toggleActionLog() {
+  // ... (code cu, khong doi) ...
   const l = document.getElementById("actionLogList");
-  if (l) l.style.display = l.style.display === "none" ? "block" : "none";
+  if (l) {
+    l.classList.toggle("minimized");
+  }
 }
 
 /**
@@ -46,7 +81,11 @@ export function showTab(id) {
 
   // Hien thi tab duoc chon
   const btn = document.querySelector(`button[onclick="showTab('${id}')"]`);
-  if (btn) btn.classList.add("active");
+  if (btn) {
+    btn.classList.add("active");
+    // --- MOI: Di chuyen thanh slider den nut vua click ---
+    moveSlider(btn);
+  }
 
   const tabContent = document.getElementById("tab-" + id);
   if (tabContent) {
@@ -62,7 +101,7 @@ export function showTab(id) {
     loadProcs();
   }
   if (id === "cam") {
-    loadDevices(); // Tai danh sach thiet bi khi mo tab
+    loadDevices();
   }
 }
 
@@ -73,10 +112,15 @@ export function showTab(id) {
  * @param {string} txt Tu khoa tim kiem
  */
 export function filterTable(tid, col, txt) {
-  document.querySelectorAll(`#${tid} tbody tr`).forEach(
-    (tr) =>
-      (tr.style.display = tr.innerText.toLowerCase().includes(txt.toLowerCase())
-        ? ""
-        : "none") // An/hien dong tuy theo ket qua tim kiem
-  );
+  // ... (code cu, khong doi) ...
+  document
+    .querySelectorAll(`#${tid} tbody tr`)
+    .forEach(
+      (tr) =>
+        (tr.style.display = tr.innerText
+          .toLowerCase()
+          .includes(txt.toLowerCase())
+          ? ""
+          : "none")
+    );
 }

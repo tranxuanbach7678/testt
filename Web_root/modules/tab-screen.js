@@ -87,7 +87,9 @@ export function toggleScreenStream(btn) {
 
   if (store.isScreenStreamOn) {
     // --- KHI BAT STREAM ---
-    streamView.src = "/api/stream/screen?t=" + Date.now();
+    streamView.src = `/api/stream/screen?t=${Date.now()}&clientId=${
+      store.CLIENT_ID
+    }`;
     streamView.alt = "Đang tải luồng...";
     btn.textContent = "⏹️ Tắt Stream Màn Hình";
     btn.classList.add("btn-danger");

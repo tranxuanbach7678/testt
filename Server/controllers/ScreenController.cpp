@@ -68,13 +68,12 @@ string ScreenController::captureScreenToRam()
 }
 
 // --- Public Handlers ---
-
 void ScreenController::handleScreenshot(SOCKET client, const string &path, const string &clientId)
 {
     string imgData = captureScreenToRam();
     if (!imgData.empty())
     {
-        if (path.find("auto=1") == string::npos) // Khong log neu la auto-refresh
+        if (path.find("auto=1") == string::npos)
             logConsole(clientId, "Yeu cau chup man hinh");
         sendFileResponse(client, imgData, "image/jpeg");
     }
@@ -86,13 +85,13 @@ void ScreenController::handleScreenshot(SOCKET client, const string &path, const
 
 void ScreenController::handleScreenStream(SOCKET client, const string &clientId)
 {
-    logConsole(clientId, "Yeu cau livestream man hinh (MJPEG)...");
+    // logConsole(clientId, "Yeu cau livestream man hinh (MJPEG)...");
     string boundary = "--frame";
     string header = "HTTP/1.1 200 OK\r\n"
                     "Content-Type: multipart/x-mixed-replace; boundary=" +
                     boundary + "\r\n"
                                "Connection: keep-alive\r\n\r\n";
-    sendAll(client, header); // Khong dong socket
+    sendAll(client, header);
 
     while (true)
     {
@@ -102,14 +101,12 @@ void ScreenController::handleScreenStream(SOCKET client, const string &clientId)
                     << "Content-Type: image/jpeg\r\n"
                     << "Content-Length: " << jpgData.size() << "\r\n\r\n";
 
-        // Neu client ngat ket noi, sendAll se tra ve loi
         if (sendAll(client, frameHeader.str()) == SOCKET_ERROR)
             break;
         if (sendAll(client, jpgData) == SOCKET_ERROR)
             break;
 
-        Sleep(40); // ~25 FPS (1000/40) - ban co the chinh so nay
+        Sleep(40); // 25 FPS
     }
-    logConsole(clientId, "Da dung livestream man hinh.");
-    // Socket se duoc dong boi RequestRouter::handleClient
+    // logConsole(clientId, "Da dung livestream man hinh.");
 }

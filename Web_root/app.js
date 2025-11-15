@@ -9,6 +9,8 @@ import {
   toggleActionLog,
   showTab,
   filterTable,
+  handleTabHover,
+  handleTabLeave,
 } from "./modules/ui.js";
 import {
   loadApps,
@@ -60,6 +62,9 @@ window.toggleCamStream = toggleCamStream;
 window.toggleKeylog = toggleKeylog;
 window.clearLogs = clearLogs;
 window.sendPower = sendPower;
+
+window.handleTabHover = handleTabHover;
+window.handleTabLeave = handleTabLeave;
 
 // --- KHOI TAO INDEXEDDB ---
 // Mo CSDL cua trinh duyệt de luu tru lau dai
