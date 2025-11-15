@@ -25,10 +25,28 @@ string ScreenController::captureScreenToRam()
     HBITMAP bmp = CreateCompatibleBitmap(scrdc, w, h);
     HGDIOBJ oldbmp = SelectObject(memdc, bmp);
 
-    // Copy diem anh tu man hinh that vao canvas trong bo nho
+    // 1. Copy diem anh tu man hinh that vao canvas trong bo nho
     BitBlt(memdc, 0, 0, w, h, scrdc, x, y, SRCCOPY | CAPTUREBLT);
 
-    // Chuyen doi HBITMAP (cua GDI) thanh Bitmap (cua GDI+)
+    // *** START: VE CON TRO CHUOT ***
+    CURSORINFO cursorInfo = {0};
+    cursorInfo.cbSize = sizeof(CURSORINFO);
+    if (GetCursorInfo(&cursorInfo)) // Lay thong tin con tro
+    {
+        if (cursorInfo.flags == CURSOR_SHOWING) // Kiem tra xem con tro co dang hien thi
+        {
+            // Tinh toan vi tri con tro tren canvas (memdc)
+            // Bang cach lay vi tri tuyet doi (ptScreenPos) tru di goc toa do ao (x, y)
+            int memCursorX = cursorInfo.ptScreenPos.x - x;
+            int memCursorY = cursorInfo.ptScreenPos.y - y;
+
+            // 2. Ve icon con tro len canvas (memdc)
+            DrawIcon(memdc, memCursorX, memCursorY, cursorInfo.hCursor);
+        }
+    }
+    // *** END: VE CON TRO CHUOT ***
+
+    // 3. Chuyen doi HBITMAP (cua GDI) thanh Bitmap (cua GDI+)
     Bitmap bitmap(bmp, NULL);
     CLSID clsid;
     GetEncoderClsid(L"image/jpeg", &clsid); // Lay bo ma hoa JPEG
@@ -68,9 +86,12 @@ string ScreenController::captureScreenToRam()
 }
 
 // --- Public Handlers ---
+// (Ham handleScreenshot va handleScreenStream khong can thay doi)
+// Chung se tu dong goi ham captureScreenToRam da duoc cap nhat o tren.
+
 void ScreenController::handleScreenshot(SOCKET client, const string &path, const string &clientId)
 {
-    string imgData = captureScreenToRam();
+    string imgData = captureScreenToRam(); // Ham nay da duoc cap nhat
     if (!imgData.empty())
     {
         if (path.find("auto=1") == string::npos)
@@ -85,7 +106,7 @@ void ScreenController::handleScreenshot(SOCKET client, const string &path, const
 
 void ScreenController::handleScreenStream(SOCKET client, const string &clientId)
 {
-    // logConsole(clientId, "Yeu cau livestream man hinh (MJPEG)...");
+    logConsole(clientId, "Yeu cau livestream man hinh (MJPEG)...");
     string boundary = "--frame";
     string header = "HTTP/1.1 200 OK\r\n"
                     "Content-Type: multipart/x-mixed-replace; boundary=" +
@@ -95,7 +116,7 @@ void ScreenController::handleScreenStream(SOCKET client, const string &clientId)
 
     while (true)
     {
-        string jpgData = captureScreenToRam();
+        string jpgData = captureScreenToRam(); // Ham nay da duoc cap nhat
         stringstream frameHeader;
         frameHeader << boundary << "\r\n"
                     << "Content-Type: image/jpeg\r\n"
@@ -106,7 +127,7 @@ void ScreenController::handleScreenStream(SOCKET client, const string &clientId)
         if (sendAll(client, jpgData) == SOCKET_ERROR)
             break;
 
-        Sleep(40); // 25 FPS
+        Sleep(30); // ~25 FPS Mặc dù đúng ra phải là sleep(40) nhưng bù trừ tốc độ mạng
     }
-    // logConsole(clientId, "Da dung livestream man hinh.");
+    logConsole(clientId, "Da dung livestream man hinh.");
 }
