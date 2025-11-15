@@ -129,5 +129,5 @@ void ScreenController::handleScreenStream(SOCKET client, const string &clientId)
 
         Sleep(30); // ~25 FPS Mặc dù đúng ra phải là sleep(40) nhưng bù trừ tốc độ mạng
     }
-    logConsole(clientId, "Da dung livestream man hinh.");
+    // logConsole(clientId, "Da dung livestream man hinh.");
 }
