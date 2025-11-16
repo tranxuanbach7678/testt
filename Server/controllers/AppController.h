@@ -2,19 +2,19 @@
 #ifndef APPCONTROLLER_H
 #define APPCONTROLLER_H
 
-#include <winsock2.h>
 #include <string>
 #include <vector>
+#include <windows.h> // Can cho HWND
 
 /**
- * @brief Xu ly cac API cho tab "Ung dung" (HWND, Close, Start)
+ * @brief Xu ly logic cho tab "Ung dung" (HWND, Close, Start)
  */
 class AppController
 {
 public:
-    void handleGetApps(SOCKET client);
-    void handleCloseApp(SOCKET client, const std::string &body);
-    void handleStartApp(SOCKET client, const std::string &body);
+    std::string getAppsJson();
+    std::string closeApp(const std::string &hwnd_str);
+    std::string startApp(const std::string &cmd);
 
 private:
     struct AppInfo; // Dinh nghia nested struct trong .cpp

@@ -1,10 +1,10 @@
 // controllers/AppController.cpp
+#include "../utils/helpers.h" // Can jsonEscape, getProcessPath
 #include "AppController.h"
-#include "../utils/helpers.h" // Can sendFileResponse, jsonEscape, getProcessPath
 #include <sstream>
-#include <vector>
 #include <shellapi.h> // cho ShellExecuteA
-#include <cstdint>    //(cho uint64_t)
+#include <stdexcept>  // cho stoll
+#include <cstdint>
 
 using namespace std;
 
@@ -23,14 +23,12 @@ struct AppController::AppInfo
 vector<AppController::AppInfo> AppController::listApplications()
 {
     vector<AppInfo> out;
-    // Duyet qua tat ca cac cua so tren he thong
     EnumWindows([](HWND h, LPARAM l) -> BOOL
                 {
-        // Chi lay cac cua so co hien thi (visible) va co tieu de
         if (IsWindowVisible(h) && GetWindowTextLengthA(h) > 0) {
-            char buf[256]; GetWindowTextA(h, buf, 256); // Lay tieu de
-            DWORD pid; GetWindowThreadProcessId(h, &pid); // Lay PID
-            string path = getProcessPath(pid); // Lay duong dan .exe
+            char buf[256]; GetWindowTextA(h, buf, 256);
+            DWORD pid; GetWindowThreadProcessId(h, &pid);
+            string path = getProcessPath(pid);
             if (path.empty()) path = "Unknown";
             ((vector<AppInfo>*)l)->push_back({h, pid, string(buf), path});
         } return TRUE; }, (LPARAM)&out);
@@ -44,24 +42,23 @@ bool AppController::closeWindowByHwnd(HWND hwnd)
 {
     if (!IsWindow(hwnd))
         return false;
-    PostMessage(hwnd, WM_CLOSE, 0, 0); // Gui tin hieu yeu cau dong (an toan)
+    PostMessage(hwnd, WM_CLOSE, 0, 0);
     return true;
 }
 
 /**
- * @brief Mo mot ung dung/file bang ten lenh (vi du: "chrome", "notepad").
+ * @brief Mo mot ung dung/file bang ten lenh.
  */
 bool AppController::startProcessFromCommand(const string &cmd)
 {
     return ((intptr_t)ShellExecuteA(NULL, "open", cmd.c_str(), NULL, NULL, SW_SHOWNORMAL) > 32);
 }
-
-// --- Public Handlers ---
-
-void AppController::handleGetApps(SOCKET client)
+// --- Public Handlers (Tra ve JSON string) ---
+string AppController::getAppsJson()
 {
     auto apps = listApplications();
     stringstream ss;
+    // --- SUA LOI: Khong them 'command' hay 'payload' ---
     ss << "[";
     for (size_t i = 0; i < apps.size(); ++i)
     {
@@ -71,23 +68,25 @@ void AppController::handleGetApps(SOCKET client)
            << "\",\"path\":\"" << jsonEscape(apps[i].path) << "\"}";
     }
     ss << "]";
-    sendFileResponse(client, ss.str(), "application/json");
+    return ss.str();
 }
 
-void AppController::handleCloseApp(SOCKET client, const string &body)
+string AppController::closeApp(const string &hwnd_str)
 {
-    uint64_t id = 0;
-    for (char c : body)
-        if (isdigit(c))
-            id = id * 10 + (c - '0');
-
-    bool ok = closeWindowByHwnd((HWND)(uintptr_t)id);
-    sendFileResponse(client, ok ? "{\"ok\":true}" : "{\"ok\":false}", "application/json");
+    try
+    {
+        uint64_t id = stoll(hwnd_str);
+        bool ok = closeWindowByHwnd((HWND)(uintptr_t)id);
+        return ok ? "{\"ok\":true}" : "{\"ok\":false}";
+    }
+    catch (...)
+    {
+        return "{\"ok\":false, \"error\":\"Invalid HWND\"}";
+    }
 }
 
-void AppController::handleStartApp(SOCKET client, const string &body)
+string AppController::startApp(const string &cmd)
 {
-    string v = getQueryParam(body, "name");
-    bool ok = !v.empty() && startProcessFromCommand(v);
-    sendFileResponse(client, ok ? "{\"ok\":true}" : "{\"ok\":false}", "application/json");
+    bool ok = !cmd.empty() && startProcessFromCommand(cmd);
+    return ok ? "{\"ok\":true}" : "{\"ok\":false}";
 }

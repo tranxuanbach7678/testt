@@ -1,9 +1,9 @@
 // controllers/ProcessController.cpp
+#include "../utils/helpers.h" // Can jsonEscape
 #include "ProcessController.h"
-#include "../utils/helpers.h" // Can sendFileResponse, jsonEscape
 #include <sstream>
 #include <tlhelp32.h> // cho listProcessesJson
-#include <cstdint>
+#include <stdexcept>  // cho stoi
 
 using namespace std;
 
@@ -45,21 +45,22 @@ bool ProcessController::killProcessByPid(DWORD pid)
     CloseHandle(h);
     return ok;
 }
-
-// --- Public Handlers ---
-
-void ProcessController::handleGetProcesses(SOCKET client)
+// --- Public Handlers (Tra ve JSON string) ---
+string ProcessController::getProcessesJson()
 {
-    sendFileResponse(client, listProcessesJson(), "application/json");
+    return listProcessesJson();
 }
 
-void ProcessController::handleKillProcess(SOCKET client, const string &body)
+string ProcessController::killProcess(const string &pid_str)
 {
-    uint64_t id = 0;
-    for (char c : body)
-        if (isdigit(c))
-            id = id * 10 + (c - '0');
-
-    bool ok = killProcessByPid((DWORD)id);
-    sendFileResponse(client, ok ? "{\"ok\":true}" : "{\"ok\":false}", "application/json");
+    try
+    {
+        DWORD id = stoul(pid_str); // stoul = string to unsigned long
+        bool ok = killProcessByPid(id);
+        return ok ? "{\"ok\":true}" : "{\"ok\":false}";
+    }
+    catch (...)
+    {
+        return "{\"ok\":false, \"error\":\"Invalid PID\"}";
+    }
 }

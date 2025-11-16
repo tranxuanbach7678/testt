@@ -5,11 +5,14 @@
 #include <winsock2.h>
 #include <string>
 
+/**
+ * @brief Xu ly logic cho "Man hinh"
+ */
 class ScreenController
 {
 public:
-    void handleScreenshot(SOCKET client, const std::string &path, const std::string &clientId);
-    void handleScreenStream(SOCKET client, const std::string &clientId);
+    void handleScreenStream(SOCKET client, const std::string &clientIP);
+    std::string getScreenshotBase64();
 
 private:
     std::string captureScreenToRam();

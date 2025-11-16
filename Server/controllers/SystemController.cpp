@@ -1,16 +1,17 @@
 // controllers/SystemController.cpp
 #include "SystemController.h"
-#include "../utils/helpers.h" // Can sendFileResponse
-#include <cstdlib>            // cho system()
+#include <cstdlib> // cho system()
 
 using namespace std;
 
-void SystemController::handlePower(SOCKET client, const string &body)
+string SystemController::powerCommand(const string &action)
 {
-    string act = (body.find("shutdown") != string::npos) ? "SHUTDOWN" : "RESTART";
-    if (act == "SHUTDOWN")
+    if (action == "shutdown")
         system("shutdown /s /t 5");
-    else
+    else if (action == "restart")
         system("shutdown /r /t 5");
-    sendFileResponse(client, "{\"ok\":true}", "application/json");
+    else
+        return "{\"ok\":false, \"error\":\"Unknown command\"}";
+
+    return "{\"ok\":true}";
 }

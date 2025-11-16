@@ -2,16 +2,15 @@
 #ifndef SYSTEMCONTROLLER_H
 #define SYSTEMCONTROLLER_H
 
-#include <winsock2.h>
 #include <string>
 
 /**
- * @brief Xu ly cac API cho tab "He thong" (Shutdown, Restart)
+ * @brief Xu ly logic cho tab "He thong" (Shutdown, Restart)
  */
 class SystemController
 {
 public:
-    void handlePower(SOCKET client, const std::string &body);
+    std::string powerCommand(const std::string &action);
 };
 
 #endif // SYSTEMCONTROLLER_H

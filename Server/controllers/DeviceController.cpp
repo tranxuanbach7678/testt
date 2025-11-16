@@ -5,16 +5,15 @@
 #include <sstream>
 #include <tchar.h>
 #include <stdio.h>
-#include <stdexcept> // Can cho stoi
+#include <stdexcept>
 
 using namespace std;
 
-// ... (ham buildDeviceListJson va G_DEVICE_LIST_JSON khong doi) ...
+// Khoi tao bien static
 string DeviceController::G_DEVICE_LIST_JSON = "{\"video\":[],\"audio\":[]}";
 
 void DeviceController::buildDeviceListJson()
 {
-    // ... (khong doi) ...
     logConsole("SYSTEM", "Dang tim FFmpeg, Camera va Mic...");
     string output;
     try
@@ -29,19 +28,15 @@ void DeviceController::buildDeviceListJson()
 
     stringstream ss(output);
     string line;
-    vector<string> videoDevices;
-    vector<string> audioDevices;
-
+    vector<string> videoDevices, audioDevices;
     while (getline(ss, line))
     {
         size_t typePos = string::npos;
         vector<string> *targetVector = nullptr;
-
         if ((typePos = line.find("(video)")) != string::npos)
             targetVector = &videoDevices;
         else if ((typePos = line.find("(audio)")) != string::npos)
             targetVector = &audioDevices;
-
         if (targetVector)
         {
             size_t endQuote = line.rfind('"', typePos);
@@ -50,8 +45,7 @@ void DeviceController::buildDeviceListJson()
             size_t startQuote = line.rfind('"', endQuote - 1);
             if (startQuote == string::npos)
                 continue;
-            string name = line.substr(startQuote + 1, endQuote - startQuote - 1);
-            targetVector->push_back(name);
+            targetVector->push_back(line.substr(startQuote + 1, endQuote - startQuote - 1));
         }
     }
     stringstream json_ss;
@@ -63,125 +57,111 @@ void DeviceController::buildDeviceListJson()
         json_ss << (i ? "," : "") << "\"" << jsonEscape(audioDevices[i]) << "\"";
     json_ss << "]}";
     G_DEVICE_LIST_JSON = json_ss.str();
-    logConsole("SYSTEM", "[OK] Da cap nhat danh sach thiet bi.");
+    logConsole("SYSTEM", "Da cap nhat danh sach thiet bi.");
 }
 
 // --- Public Handlers ---
-void DeviceController::handleGetDevices(SOCKET client, const string &path, const string &clientId)
+string DeviceController::getDevices(bool refresh)
 {
-    if (path.find("refresh=1") != string::npos)
+    if (refresh)
     {
-        logConsole(clientId, "Yeu cau quet lai thiet bi...");
+        logConsole("Gateway", "Yeu cau quet lai thiet bi...");
         buildDeviceListJson();
     }
-    sendFileResponse(client, G_DEVICE_LIST_JSON, "application/json");
+    // --- SUA LOI: Khong them 'command' hay 'payload' ---
+    return G_DEVICE_LIST_JSON;
 }
 
-void DeviceController::handleRecordVideo(SOCKET client, const string &body, const string &clientId)
+string DeviceController::recordVideo(const string &dur_str, const string &cam, const string &audio)
 {
-    string s_dur = getQueryParam(body, "duration", false);
-    string cam_client = getQueryParam(body, "cam", true);
-    string audio_client = getQueryParam(body, "audio", true);
-
-    if (s_dur.empty())
-        s_dur = "5";
-    int dur = stoi(s_dur);
-
-    if (cam_client.empty() || audio_client.empty())
+    if (cam.empty() || audio.empty())
     {
-        sendFileResponse(client, "{\"ok\":false,\"error\":\"Chua chon Camera/Audio.\"}", "application/json");
-        return;
+        return "{\"ok\":false,\"error\":\"Chua chon Camera/Audio.\"}";
     }
 
-    string fname = "/vid_" + to_string(time(0)) + "_" + to_string(rand() % 1000) + ".mp4";
-    string cmd = "ffmpeg -f dshow -i video=\"" + cam_client + "\":audio=\"" + audio_client + "\" -t " + to_string(dur) + " -c:v libx264 -preset ultrafast -c:a aac -b:a 128k -y \"." + fname + "\" 2> NUL";
+    string fname = "public/vid_temp.mp4";
 
-    logConsole(clientId, "Dang quay " + to_string(dur) + "s (Cam: " + cam_client + ", Mic: " + audio_client + ")...");
+    // === FIX 2: Tra lai codec .mp4 va '2> NUL' (GIONG HET CODE CU) ===
+    string cmd = "ffmpeg -f dshow -i video=\"" + cam + "\":audio=\"" + audio +
+                 "\" -t " + dur_str +
+                 " -c:v libx264 -preset ultrafast -c:a aac -b:a 128k -y \"" +
+                 fname + "\" 2> NUL"; // <-- THEM 2> NUL
+
+    logConsole("Gateway", "Dang quay " + dur_str + "s...");
+
     if (system(cmd.c_str()) == 0)
     {
-        // logConsole(clientId, "[OK] Quay xong video va gui file");
-        sendFileResponse(client, "{\"ok\":true,\"path\":\"" + fname + "\"}", "application/json");
+        logConsole("Gateway", "Quay xong: " + fname);
+        // === FIX 3: Tra ve duong dan ma web co a truy cap ===
+        return "{\"ok\":true,\"path\":\"/vid_temp.mp4\"}"; // <-- Bỏ "public/"
     }
     else
     {
-        logConsole(clientId, "Loi quay video FFmpeg");
-        sendFileResponse(client, "{\"ok\":false,\"error\":\"FFmpeg Error. Check device name.\"}", "application/json");
+        logConsole("Gateway", "Loi quay video FFmpeg.");
+        return "{\"ok\":false,\"error\":\"FFmpeg Error. Check device name.\"}";
     }
 }
-void DeviceController::handleStreamCam(SOCKET client, const string &path, const string &clientId)
+void DeviceController::handleStreamCam(SOCKET client, const string &clientIP, const string &cam, const string &audio)
 {
-    string camName = urlDecode(getQueryParam(path, "cam", true));
-    string audioName = urlDecode(getQueryParam(path, "audio", true));
-
-    if (camName.empty() || audioName.empty())
+    if (cam.empty() || audio.empty())
     {
-        logConsole(clientId, "Loi stream cam: Thieu ten cam/audio.");
-        sendFileResponse(client, "400 Bad Request", "text/plain", 400);
+        logConsole(clientIP, "Loi stream cam: Thieu ten cam/audio.");
         return;
     }
 
-    logConsole(clientId, "Bắt đầu stream camera: " + camName);
-    // ... (Tao Pipe) ...
+    logConsole(clientIP, "Bat dau stream camera (MJPEG Stream): " + cam);
+
     HANDLE hPipeRead, hPipeWrite;
     SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+
     if (!CreatePipe(&hPipeRead, &hPipeWrite, &sa, 0))
     {
-        logConsole(clientId, "Loi CreatePipe");
+        logConsole(clientIP, "Loi CreatePipe");
         return;
     }
 
-    // ... (Thiet lap STARTUPINFOA) ...
     STARTUPINFOA si = {sizeof(STARTUPINFOA)};
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
     si.hStdOutput = hPipeWrite;
     si.hStdError = hPipeWrite;
-
     PROCESS_INFORMATION pi;
-    string cmd_s = "ffmpeg -f dshow -i video=\"" + camName + "\":audio=\"" + audioName + "\" -f mpjpeg -q:v 4 -r 20 -";
+
+    string cmd_s = "ffmpeg -f dshow -i video=\"" + cam + "\":audio=\"" + audio + "\" -f mpjpeg -q:v 3 -r 20 -";
     char cmd[1024];
     strcpy_s(cmd, cmd_s.c_str());
 
-    // ... (Tao Process) ...
     if (!CreateProcessA(NULL, cmd, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
-    {
-        logConsole(clientId, "Loi CreateProcess ffmpeg");
-        CloseHandle(hPipeRead);
-        CloseHandle(hPipeWrite);
+    { /* ... */
         return;
     }
-
     CloseHandle(hPipeWrite);
 
-    // ... (Gui Header MJPEG) ...
-    string mjpeg_header = "HTTP/1.1 200 OK\r\n"
-                          "Content-Type: multipart/x-mixed-replace; boundary=--ffmpeg\r\n"
-                          "Connection: keep-alive\r\n\r\n";
+    sendTcp(client, "STREAM_START");
 
-    if (sendAll(client, mjpeg_header) == SOCKET_ERROR)
-    {
-        logConsole(clientId, "Client ngat ket noi truoc khi stream.");
-        TerminateProcess(pi.hProcess, 1);
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-        CloseHandle(hPipeRead);
-        return;
-    }
-
-    // ... (Vong lap Relay) ...
     char relayBuffer[4096];
     DWORD bytesRead;
+
     while (ReadFile(hPipeRead, relayBuffer, sizeof(relayBuffer), &bytesRead, NULL) && bytesRead > 0)
     {
+        // === THEM LAI: Kiem tra lenh moi ===
+        u_long bytes_available = 0;
+        ioctlsocket(client, FIONREAD, &bytes_available);
+        if (bytes_available > 0)
+        {
+            logConsole(clientIP, "Nhan duoc lenh moi -> Dung stream cam.");
+            break;
+        }
+        // === KET THUC THEM ===
+
         if (send(client, relayBuffer, bytesRead, 0) == SOCKET_ERROR)
         {
-            // logConsole(clientId, "Client ngat ket noi.");
+            logConsole(clientIP, "Client ngat ket noi (stream loi).");
             break;
         }
     }
 
-    // ... (Don dep) ...
-    // logConsole(clientId, "Dung stream camera.");
+    logConsole(clientIP, "Dung stream camera (MJPEG).");
     TerminateProcess(pi.hProcess, 1);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);

@@ -2,17 +2,17 @@
 #ifndef PROCESSCONTROLLER_H
 #define PROCESSCONTROLLER_H
 
-#include <winsock2.h>
 #include <string>
+#include <windows.h> // Can cho DWORD
 
 /**
- * @brief Xu ly cac API cho tab "Tien trinh" (PID, Kill)
+ * @brief Xu ly logic cho tab "Tien trinh" (PID, Kill)
  */
 class ProcessController
 {
 public:
-    void handleGetProcesses(SOCKET client);
-    void handleKillProcess(SOCKET client, const std::string &body);
+    std::string getProcessesJson();
+    std::string killProcess(const std::string &pid_str);
 
 private:
     std::string listProcessesJson();

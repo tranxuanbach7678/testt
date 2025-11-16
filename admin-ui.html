@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bảng Điều Khiển Server</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        background: #222;
+        color: #eee;
+        margin: 0;
+      }
+      header {
+        background: #333;
+        padding: 15px 20px;
+        box-shadow: 0 2px 5px #000;
+      }
+      .controls {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+      button {
+        font-size: 16px;
+        padding: 10px 20px;
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+      }
+      #btnStart {
+        background: #28a745;
+        color: white;
+      }
+      #btnStop {
+        background: #dc3545;
+        color: white;
+      }
+      #status {
+        font-weight: bold;
+      }
+      .log-container {
+        background: #111;
+        padding: 20px;
+        margin: 20px;
+        border-radius: 8px;
+        height: 75vh;
+        overflow-y: scroll;
+        font-family: monospace;
+        white-space: pre-wrap;
+        font-size: 14px;
+        border: 1px solid #444;
+      }
+      .log-line {
+        margin: 0;
+        padding: 2px 0;
+        border-bottom: 1px solid #2a2a2a;
+      }
+      .log-source-CPP {
+        color: #81d4fa;
+      } /* Xanh nhat */
+      .log-source-Gateway {
+        color: #c5e1a5;
+      } /* Xanh la */
+      .log-source-AdminPanel {
+        color: #ffcc80;
+        font-weight: bold;
+      } /* Cam */
+      .log-source-ERR {
+        color: #ef9a9a;
+        background: #3d1c1c;
+      } /* Do */
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="controls">
+        <button id="btnStart">▶️ Start Servers</button>
+        <button id="btnStop">⏹️ Stop Servers</button>
+        <div id="status">Trạng thái: 🔴 Đã dừng</div>
+      </div>
+    </header>
+
+    <div id="log-panel" class="log-container">
+      <p class="log-line">
+        <span class="log-source-AdminPanel">[AdminPanel]</span>: Chào mừng! Hãy
+        kết nối WebSocket...
+      </p>
+    </div>
+
+    <script>
+      const ws = new WebSocket(`ws://${window.location.host}`);
+      const logPanel = document.getElementById("log-panel");
+      const statusEl = document.getElementById("status");
+      const btnStart = document.getElementById("btnStart");
+      const btnStop = document.getElementById("btnStop");
+
+      ws.onopen = () => {
+        logPanel.innerHTML =
+          '<p class="log-line"><span class="log-source-AdminPanel">[AdminPanel]</span>: Đã kết nối với Bảng Điều Khiển. Bấm "Start Servers" để bắt đầu.</p>';
+        statusEl.textContent = "Trạng thái: 🔵 Đã kết nối (Sẵn sàng)";
+        statusEl.style.color = "#81d4fa";
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        // Xac dinh class CSS
+        let sourceClass = "log-source-Other";
+        if (data.source.includes("C++")) sourceClass = "log-source-CPP";
+        if (data.source.includes("Gateway")) sourceClass = "log-source-Gateway";
+        if (data.source.includes("AdminPanel"))
+          sourceClass = "log-source-AdminPanel";
+        if (data.source.includes("ERR")) sourceClass = "log-source-ERR";
+
+        // Cap nhat trang thai
+        if (
+          data.source === "AdminPanel" &&
+          data.message.includes("Đã khởi động")
+        ) {
+          statusEl.textContent = "Trạng thái: 🟢 Đang chạy";
+          statusEl.style.color = "#c5e1a5";
+        } else if (
+          data.source === "AdminPanel" &&
+          data.message.includes("đã dừng")
+        ) {
+          statusEl.textContent = "Trạng thái: 🔴 Đã dừng";
+          statusEl.style.color = "#ef9a9a";
+        }
+
+        // Hien thi log
+        const p = document.createElement("p");
+        p.className = "log-line";
+        p.innerHTML = `<span class="${sourceClass}">[${data.source}]</span>: ${data.message}`;
+
+        // Tu dong cuon
+        const isScrolledToBottom =
+          logPanel.scrollHeight - logPanel.clientHeight <=
+          logPanel.scrollTop + 1;
+        logPanel.appendChild(p);
+        if (isScrolledToBottom) {
+          logPanel.scrollTop = logPanel.scrollHeight;
+        }
+      };
+
+      ws.onclose = () => {
+        statusEl.textContent = "Trạng thái: ‼️ Lỗi Kết Nối Bảng Điều Khiển";
+        statusEl.style.color = "red";
+      };
+
+      // Gan su kien cho nut
+      btnStart.onclick = () => ws.send("START");
+      btnStop.onclick = () => ws.send("STOP");
+    </script>
+  </body>
+</html>
