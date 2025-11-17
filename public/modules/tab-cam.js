@@ -48,6 +48,10 @@ async function downloadAndSaveVideo(path) {
         .add({ blob, date: new Date() });
       loadVidGallery(); // Ham nay da co san trong file
       stat.textContent = "✅ Đã lưu vào thư viện!";
+      setTimeout(() => {
+        logActionUI(`Dọn dẹp file server: ${path}`, true); // Đây là log "đã xóa"
+        sendCommand("DELETE_VIDEO", path);
+      }, 2000);
     } else {
       throw new Error("File rỗng hoặc DB lỗi");
     }
@@ -138,13 +142,25 @@ export function toggleCamStream(btn) {
   const streamView = document.getElementById("camStreamView");
   const streamStatus = document.getElementById("camStreamStatus");
 
+  // (Giu logic 'btn === null' de app.js (don luong) cu van chay duoc)
   if (btn === null) {
     store.isCamStreamOn = false;
-  } else {
-    store.isCamStreamOn = !store.isCamStreamOn;
+    streamView.src = "";
+    streamView.alt = "Stream đã tắt.";
+    const activeBtn = document.getElementById("btnToggleCamStream");
+    if (activeBtn) {
+      activeBtn.textContent = "▶️ Bật Stream Camera";
+      activeBtn.classList.remove("btn-danger");
+      activeBtn.classList.add("btn-primary");
+    }
+    streamStatus.textContent = "";
+    return;
   }
 
+  store.isCamStreamOn = !store.isCamStreamOn;
+
   if (store.isCamStreamOn) {
+    // (Toan bo code Bat Stream... giu nguyen)
     const camName = document.getElementById("camName").value;
     const audioName = document.getElementById("audioName").value;
     if (!camName || !audioName || camName.startsWith("Khong tim")) {
@@ -156,21 +172,17 @@ export function toggleCamStream(btn) {
     store.isScreenStreamOn = false;
     document.getElementById("screenStreamView").src = "";
 
-    sendCommand("START_STREAM_CAM", { cam: camName, audio: audioName });
-
     streamView.alt = "Đang tải luồng...";
     btn.textContent = "⏹️ Tắt Stream Camera";
     btn.classList.add("btn-danger");
     btn.classList.remove("btn-primary");
     streamStatus.textContent = "⏳ Đang kết nối với ffmpeg...";
     logActionUI("Bật livestream camera", true);
+
+    sendCommand("START_STREAM_CAM", { cam: camName, audio: audioName });
   } else {
-    // --- SUA LOI: Khong gui STOP_STREAM ---
-    if (btn) {
-      streamView.src = ""; // Tu ngat ket noi
-      logActionUI("Tắt livestream camera", true);
-      loadDevices(false);
-    }
+    // Logic khi tat stream bang nut
+    streamView.src = ""; // Xoa nguon anh
     streamView.alt = "Stream đã tắt.";
     const activeBtn = document.getElementById("btnToggleCamStream");
     if (activeBtn) {
@@ -179,5 +191,9 @@ export function toggleCamStream(btn) {
       activeBtn.classList.add("btn-primary");
     }
     streamStatus.textContent = "";
+    logActionUI("Tắt livestream camera", true);
+
+    // === FIX: Gui lenh dung ===
+    sendCommand("STOP_STREAM");
   }
 }

@@ -402,3 +402,17 @@ tr:hover {
   box-shadow: none;
   text-align: center; /* Can giua */
 }
+.client-info {
+  position: absolute;
+  top: 5px;
+  right: 15px;
+  font-size: 11px;
+  color: #aaa;
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 3px 6px;
+  border-radius: 3px;
+}
+header {
+  position: relative; /* Can thiet de .client-info dinh vi */
+}

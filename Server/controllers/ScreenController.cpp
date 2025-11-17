@@ -1,9 +1,8 @@
-// controllers/ScreenController.cpp
+// controllers/ScreenController.cpp (PHIEN BAN HYBRID)
 #include "ScreenController.h"
-#include "../utils/helpers.h" // Can sendStreamFrame, GetEncoderClsid
-#include "../utils/logging.h" // Can logConsole
+#include "../utils/helpers.h"
+#include "../utils/logging.h"
 #include <sstream>
-#include <winsock2.h>
 
 using namespace Gdiplus;
 using namespace std;
@@ -11,8 +10,7 @@ using namespace std;
 // ham captureScreenToRam() KHONG THAY DOI
 string ScreenController::captureScreenToRam()
 {
-    // ... (Toan bo code chup man hinh va ve chuot)
-    // ... (giong het code cu)
+    // ... (Code GDI+ cua ban o day) ...
     int x = GetSystemMetrics(SM_XVIRTUALSCREEN);
     int y = GetSystemMetrics(SM_YVIRTUALSCREEN);
     int w = GetSystemMetrics(SM_CXVIRTUALSCREEN);
@@ -61,51 +59,34 @@ string ScreenController::captureScreenToRam()
     return data;
 }
 
-// --- Public Handlers (DA THAY DOI) ---
-
-/**
- * @brief Tra ve 1 khung hinh screenshot (da ma hoa Base64)
- */
 std::string ScreenController::getScreenshotBase64()
 {
     string jpgData = captureScreenToRam();
     string base64Data = Base64Encode(jpgData);
-
-    // --- SUA LOI: Khong them 'command' ---
     return "{\"payload\":\"" + base64Data + "\"}";
 }
 
 /**
- * @brief Xu ly vong lap stream man hinh
+ * @brief Xu ly vong lap stream man hinh (CHO CONG 9001)
  */
 void ScreenController::handleScreenStream(SOCKET client, const string &clientIP)
 {
-    logConsole(clientIP, "Bat dau stream man hinh.");
+    logConsole(clientIP, "Bat dau stream man hinh (Cong 9001).");
 
-    if (!sendTcp(client, "STREAM_START"))
-    {
-        logConsole(clientIP, "Gateway ngat ket noi truoc khi stream.");
-        return;
-    }
+    // === XOA: sendTcp("STREAM_START") ===
+    // (Cong 9001 chi gui video)
 
     while (true)
     {
-        // === THEM LAI: Kiem tra lenh moi ===
-        u_long bytes_available = 0;
-        ioctlsocket(client, FIONREAD, &bytes_available);
-        if (bytes_available > 0)
-        {
-            logConsole(clientIP, "Nhan duoc lenh moi -> Dung stream.");
-            break; // Thoat vong lap
-        }
-        // === KET THUC THEM ===
+        // === XOA: ioctlsocket ===
+        // (Luong nay se tu dong ngat khi Gateway dong TCP)
 
         string jpgData = captureScreenToRam();
         if (!sendStreamFrame(client, jpgData))
         {
-            break; // Loi, client ngat ket noi
+            break; // Loi: Client (Gateway) da ngat ket noi
         }
-        Sleep(3);
+        Sleep(40); // 25 FPS
     }
     logConsole(clientIP, "Da dung stream man hinh.");
 }

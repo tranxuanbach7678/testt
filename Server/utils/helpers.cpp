@@ -1,27 +1,38 @@
-// utils/helpers.cpp
+// utils/helpers.cpp (PHIEN BAN HYBRID - DA FIX)
 #include "helpers.h"
 #include <fstream>
 #include <array>
 #include <stdexcept>
 #include <shlwapi.h>
-#include <cstdint> // MOI: Them vao
+#include <cstdint>
+#include <mutex> // Them include
 
 using namespace Gdiplus;
 using namespace std;
 
-// (Cac ham sendTcp, sendStreamFrame, jsonEscape, Base64Encode khong doi)
+// Ham cu (cho stream)
 bool sendTcp(SOCKET s, const std::string &data)
 {
-    // (Xoa lock)
     if (send(s, data.c_str(), data.length(), 0) == SOCKET_ERROR)
         return false;
     if (send(s, "\n", 1, 0) == SOCKET_ERROR)
         return false;
     return true;
 }
+
+// Ham moi (cho cong lenh)
+bool sendCmdTcp(SOCKET s, const std::string &correlationId, const std::string &data, std::mutex &socketMutex)
+{
+    std::lock_guard<std::mutex> lock(socketMutex);
+    std::string msg = correlationId + "|" + data + "\n";
+    // === FIX LOI TYPO ===
+    if (send(s, msg.c_str(), msg.length(), 0) == SOCKET_ERROR)
+        return false;
+    return true;
+}
+
 bool sendStreamFrame(SOCKET s, const std::string &data)
 {
-    // (Xoa lock)
     uint32_t len = data.size();
     if (send(s, (const char *)&len, 4, 0) == SOCKET_ERROR)
         return false;
@@ -83,7 +94,6 @@ std::string Base64Encode(const std::string &data)
     return ret;
 }
 
-// --- MOI: Ham phan tich doi so (thay cho stringstream) ---
 std::vector<std::string> splitArgs(const std::string &s)
 {
     std::vector<std::string> result;
@@ -97,11 +107,8 @@ std::vector<std::string> splitArgs(const std::string &s)
         if (c == '"')
         {
             in_quote = !in_quote;
-            // Neu la dau " bat dau, va current_arg rong (lenh dau tien)
             if (in_quote && current_arg.empty())
                 continue;
-
-            // Neu la dau " ket thuc
             if (!in_quote)
             {
                 result.push_back(current_arg);
@@ -122,7 +129,7 @@ std::vector<std::string> splitArgs(const std::string &s)
         }
     }
 
-    // Them引 so cuoi cung
+    // === FIX LOI KY TU LA ===
     if (!current_arg.empty())
     {
         result.push_back(current_arg);
@@ -131,7 +138,6 @@ std::vector<std::string> splitArgs(const std::string &s)
     return result;
 }
 
-// (Cac ham system: exec, getLocalIPv4Addresses, getProcessPath khong doi)
 std::string exec(const char *cmd)
 {
     std::array<char, 128> buffer;
@@ -146,23 +152,18 @@ std::string exec(const char *cmd)
     _pclose(pipe);
     return result;
 }
+
 std::string readBinaryFile(const std::string &filename)
 {
-    // Mo file o che do binary va di chuyen con tro ve cuoi file
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
     if (!file)
         return "";
-
-    // Lay kich thuoc file
     std::streamsize size = file.tellg();
-    file.seekg(0, std::ios::beg); // Di chuyen con tro ve dau file
-
-    // Tao mot string voi kich thuoc da biet va doc du lieu vao
+    file.seekg(0, std::ios::beg);
     std::string buffer(size, '\0');
     if (file.read(&buffer[0], size))
         return buffer;
-
-    return ""; // Tra ve rong neu doc loi
+    return "";
 }
 std::vector<std::string> getLocalIPv4Addresses()
 {
@@ -208,7 +209,6 @@ std::string getProcessPath(DWORD pid)
     return std::string(path);
 }
 
-// (Ham GDI+ GetEncoderClsid khong doi)
 int GetEncoderClsid(const WCHAR *format, CLSID *pClsid)
 {
     UINT num = 0, size = 0;

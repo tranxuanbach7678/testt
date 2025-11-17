@@ -73,38 +73,13 @@ export function clearGallery() {
   }
 }
 
-// --- SUA LOI: Logic Tat Stream ---
 export function toggleScreenStream(btn) {
   const streamView = document.getElementById("screenStreamView");
   const streamStatus = document.getElementById("screenStreamStatus");
 
   if (btn === null) {
-    // Goi tu 'stream_stop'
     store.isScreenStreamOn = false;
-  } else {
-    store.isScreenStreamOn = !store.isScreenStreamOn;
-  }
-
-  if (store.isScreenStreamOn) {
-    store.isCamStreamOn = false;
-    document.getElementById("camStreamView").src = "";
-
-    sendCommand("START_STREAM_SCREEN");
-
-    streamView.alt = "Đang tải luồng...";
-    btn.textContent = "⏹️ Tắt Stream Màn Hình";
-    btn.classList.add("btn-danger");
-    btn.classList.remove("btn-primary");
-    streamStatus.textContent = "⏳ Đang kết nối...";
-    logActionUI("Bật livestream màn hình", true);
-  } else {
-    // --- SUA LOI: Khong gui STOP_STREAM ---
-    if (btn) {
-      // Chi log khi nguoi dung chu dong tat
-      streamView.src = ""; // Tu ngat ket noi
-      logActionUI("Tắt livestream màn hình", true);
-      updateScreen(false);
-    }
+    streamView.src = "";
     streamView.alt = "Stream đã tắt.";
     const activeBtn = document.getElementById("btnToggleScreenStream");
     if (activeBtn) {
@@ -113,5 +88,38 @@ export function toggleScreenStream(btn) {
       activeBtn.classList.add("btn-primary");
     }
     streamStatus.textContent = "";
+    return;
+  }
+
+  store.isScreenStreamOn = !store.isScreenStreamOn;
+
+  if (store.isScreenStreamOn) {
+    // (Toan bo code Bat Stream... giu nguyen)
+    store.isCamStreamOn = false;
+    document.getElementById("camStreamView").src = "";
+
+    streamView.alt = "Đang tải luồng...";
+    btn.textContent = "⏹️ Tắt Stream Màn Hình";
+    btn.classList.add("btn-danger");
+    btn.classList.remove("btn-primary");
+    streamStatus.textContent = "⏳ Đang kết nối...";
+    logActionUI("Bật livestream màn hình", true);
+
+    sendCommand("START_STREAM_SCREEN");
+  } else {
+    // Logic khi tat stream bang nut
+    streamView.src = ""; // Xoa nguon anh
+    streamView.alt = "Stream đã tắt.";
+    const activeBtn = document.getElementById("btnToggleScreenStream");
+    if (activeBtn) {
+      activeBtn.textContent = "▶️ Bật Stream Màn Hình";
+      activeBtn.classList.remove("btn-danger");
+      activeBtn.classList.add("btn-primary");
+    }
+    streamStatus.textContent = "";
+    logActionUI("Tắt livestream màn hình", true);
+
+    // === FIX: Gui lenh dung ===
+    sendCommand("STOP_STREAM");
   }
 }

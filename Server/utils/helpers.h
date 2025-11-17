@@ -1,4 +1,4 @@
-// utils/helpers.h
+// utils/helpers.h (PHIEN BAN HYBRID)
 #ifndef HELPERS_H
 #define HELPERS_H
 
@@ -11,9 +11,11 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <mutex> // Them include nay
 
 // --- Socket Helpers ---
-bool sendTcp(SOCKET s, const std::string &data);
+bool sendTcp(SOCKET s, const std::string &data);                                                               // Ham cu (cho stream)
+bool sendCmdTcp(SOCKET s, const std::string &correlationId, const std::string &data, std::mutex &socketMutex); // Ham moi
 bool sendStreamFrame(SOCKET s, const std::string &data);
 
 // --- String Helpers ---

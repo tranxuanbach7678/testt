@@ -4,6 +4,8 @@
 
 #include <winsock2.h>
 #include <string>
+#include <mutex>  // Them vao
+#include <atomic> // Them vao
 
 /**
  * @brief Xu ly logic cho tab "Camera" (Quet, Quay, Stream)
@@ -23,6 +25,8 @@ public:
 
 private:
     static std::string G_DEVICE_LIST_JSON;
+    static std::mutex G_DEVICE_LIST_MUTEX; // Bảo vệ việc ghi biến static
+    static std::atomic<bool> G_IS_REFRESHING;
 };
 
 #endif // DEVICECONTROLLER_H

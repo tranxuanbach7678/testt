@@ -1,9 +1,11 @@
-// modules/socket.js
+// modules/socket.js (NANG CAP: Gui Device ID)
 import { store } from "./store.js";
 // Khong import 'ui' de tranh loi phu thuoc vong
 
-// 1. Tao ket noi WebSocket
-export const socket = new WebSocket(`ws://${window.location.host}`);
+// === FIX 3: Gui DEVICE_ID qua Query Parameter ===
+export const socket = new WebSocket(
+  `ws://${window.location.host}?id=${store.DEVICE_ID}`
+);
 
 const responseHandlers = {};
 
@@ -18,10 +20,8 @@ socket.onmessage = (event) => {
     const url = URL.createObjectURL(
       new Blob([event.data], { type: "image/jpeg" })
     );
-
     const screenView = document.getElementById("screenStreamView");
     const camView = document.getElementById("camStreamView");
-
     if (store.isScreenStreamOn && screenView) {
       screenView.src = url;
       screenView.onload = () => URL.revokeObjectURL(url);
@@ -35,6 +35,21 @@ socket.onmessage = (event) => {
   // Xu ly JSON
   const msg = JSON.parse(event.data);
 
+  // Xu ly tin nhan Xac thuc
+  if (msg.type === "auth") {
+    window.dispatchEvent(
+      new CustomEvent("socket:auth", {
+        detail: {
+          status: msg.status,
+          message: msg.message,
+          clientInfo: msg.clientInfo, // Socket (IP:Port)
+          deviceId: msg.deviceId, // Ma Dinh Danh (CL_f1b9)
+        },
+      })
+    );
+    return;
+  }
+
   if (msg.type === "stream_start") {
     console.log("Nhan tin hieu STREAM_START tu server");
     if (store.isScreenStreamOn)
@@ -46,20 +61,17 @@ socket.onmessage = (event) => {
     return;
   }
 
-  // MOI: Xu ly khi stream dung (do C++ dong TCP)
   if (msg.type === "stream_stop") {
     console.log("Nhan tin hieu STREAM_STOP (tu Gateway)");
-    // Goi ham toggle de reset UI
     if (store.isScreenStreamOn) {
-      window.toggleScreenStream(null); // Gui 'null' de biet day la tu dong tat
+      window.toggleScreenStream(null);
     }
     if (store.isCamStreamOn) {
-      window.toggleCamStream(null); // Gui 'null'
+      window.toggleCamStream(null);
     }
     return;
   }
 
-  // MOI: Xu ly loi tu Gateway
   if (msg.type === "error") {
     window.dispatchEvent(
       new CustomEvent("socket:error", {
@@ -82,9 +94,8 @@ socket.onmessage = (event) => {
 };
 
 socket.onopen = () => {
-  console.log("WebSocket da ket noi!");
-  // Phat ra su kien de app.js biet va bat dau tai du lieu
-  window.dispatchEvent(new CustomEvent("socket:open"));
+  console.log("WebSocket da ket noi! Dang cho xac thuc...");
+  // Doi su kien 'socket:auth'
 };
 
 socket.onclose = (event) => {
@@ -101,9 +112,6 @@ socket.onerror = (err) => {
   );
 };
 
-/**
- * @brief Ham "van nang" de GUI LENH den server
- */
 export function sendCommand(command, payload = null) {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(

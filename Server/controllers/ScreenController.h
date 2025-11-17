@@ -1,13 +1,11 @@
-// controllers/ScreenController.h
+// controllers/ScreenController.h (PHIEN BAN HYBRID)
 #ifndef SCREENCONTROLLER_H
 #define SCREENCONTROLLER_H
 
 #include <winsock2.h>
 #include <string>
+// (Xoa atomic, mutex)
 
-/**
- * @brief Xu ly logic cho "Man hinh"
- */
 class ScreenController
 {
 public:
@@ -17,5 +15,4 @@ public:
 private:
     std::string captureScreenToRam();
 };
-
-#endif // SCREENCONTROLLER_H
+#endif

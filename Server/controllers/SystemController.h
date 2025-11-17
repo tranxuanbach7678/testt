@@ -11,6 +11,7 @@ class SystemController
 {
 public:
     std::string powerCommand(const std::string &action);
+    std::string deleteTempFile(const std::string &urlPath);
 };
 
 #endif // SYSTEMCONTROLLER_H

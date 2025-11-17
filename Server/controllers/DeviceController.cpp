@@ -1,4 +1,4 @@
-// controllers/DeviceController.cpp
+// controllers/DeviceController.cpp (PHIEN BAN HYBRID)
 #include "DeviceController.h"
 #include "../utils/helpers.h"
 #include "../utils/logging.h"
@@ -6,23 +6,34 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <stdexcept>
+#include <thread>
 
 using namespace std;
 
-// Khoi tao bien static
 string DeviceController::G_DEVICE_LIST_JSON = "{\"video\":[],\"audio\":[]}";
+std::mutex DeviceController::G_DEVICE_LIST_MUTEX;
+std::atomic<bool> DeviceController::G_IS_REFRESHING(false);
 
 void DeviceController::buildDeviceListJson()
 {
-    logConsole("SYSTEM", "Dang tim FFmpeg, Camera va Mic...");
+    // Dam bao chi 1 luong duoc refresh
+    if (G_IS_REFRESHING.exchange(true))
+    {
+        logConsole("SYSTEM", "Refresh bi trung lap, bo qua.");
+        return;
+    }
+
+    logConsole("SYSTEM", "Dang tim FFmpeg, Camera va Mic (Async)...");
     string output;
     try
     {
+        // === DAY LA TAC VU BLOCK ===
         output = exec("ffmpeg -list_devices true -f dshow -i dummy 2>&1");
     }
     catch (...)
     {
         logConsole("SYSTEM", "LOI: Khong the chay FFmpeg.");
+        G_IS_REFRESHING.store(false); // Mo khoa refresh
         return;
     }
 
@@ -56,20 +67,37 @@ void DeviceController::buildDeviceListJson()
     for (size_t i = 0; i < audioDevices.size(); ++i)
         json_ss << (i ? "," : "") << "\"" << jsonEscape(audioDevices[i]) << "\"";
     json_ss << "]}";
-    G_DEVICE_LIST_JSON = json_ss.str();
+    {
+        std::lock_guard<std::mutex> lock(G_DEVICE_LIST_MUTEX);
+        G_DEVICE_LIST_JSON = json_ss.str();
+    }
     logConsole("SYSTEM", "Da cap nhat danh sach thiet bi.");
+    G_IS_REFRESHING.store(false); // Mo khoa refresh
 }
 
-// --- Public Handlers ---
 string DeviceController::getDevices(bool refresh)
 {
     if (refresh)
     {
-        logConsole("Gateway", "Yeu cau quet lai thiet bi...");
-        buildDeviceListJson();
+        if (G_IS_REFRESHING.load())
+        {
+            // Neu dang co 1 luong khac refresh, tra ve "busy"
+            return "{\"video\":[],\"audio\":[], \"status\":\"refresh_busy\"}";
+        }
+        else
+        {
+            // Neu chua co, bat dau refresh trong luong MOI va tra ve "pending"
+            logConsole("Gateway", "Yeu cau quet lai thiet bi (Async)...");
+            std::thread(buildDeviceListJson).detach();
+            return "{\"video\":[],\"audio\":[], \"status\":\"refresh_pending\"}";
+        }
     }
-    // --- SUA LOI: Khong them 'command' hay 'payload' ---
-    return G_DEVICE_LIST_JSON;
+    else
+    {
+        // === VA LOI 3: Dung Mutex de doc an toan ===
+        std::lock_guard<std::mutex> lock(G_DEVICE_LIST_MUTEX);
+        return G_DEVICE_LIST_JSON;
+    }
 }
 
 string DeviceController::recordVideo(const string &dur_str, const string &cam, const string &audio)
@@ -79,21 +107,23 @@ string DeviceController::recordVideo(const string &dur_str, const string &cam, c
         return "{\"ok\":false,\"error\":\"Chua chon Camera/Audio.\"}";
     }
 
-    string fname = "public/vid_temp.mp4";
+    time_t now = time(0);
+    char fname_buf[100];
+    // Dinh dang ten file: vid_YYYYMMDD_HHMMSS.mp4
+    strftime(fname_buf, sizeof(fname_buf), "vid_%Y%m%d_%H%M%S.mp4", localtime(&now));
 
-    // === FIX 2: Tra lai codec .mp4 va '2> NUL' (GIONG HET CODE CU) ===
+    string fname_rel_path = "public/" + string(fname_buf); // vd: "public/vid_20251117_193000.mp4"
+    string url_path = "/" + string(fname_buf);             // vd: "/vid_20251117_193000.mp4"
+
     string cmd = "ffmpeg -f dshow -i video=\"" + cam + "\":audio=\"" + audio +
                  "\" -t " + dur_str +
                  " -c:v libx264 -preset ultrafast -c:a aac -b:a 128k -y \"" +
-                 fname + "\" 2> NUL"; // <-- THEM 2> NUL
-
+                 fname_rel_path + "\" 2> NUL";
     logConsole("Gateway", "Dang quay " + dur_str + "s...");
-
     if (system(cmd.c_str()) == 0)
     {
-        logConsole("Gateway", "Quay xong: " + fname);
-        // === FIX 3: Tra ve duong dan ma web co a truy cap ===
-        return "{\"ok\":true,\"path\":\"/vid_temp.mp4\"}"; // <-- Bỏ "public/"
+        logConsole("Gateway", "Quay xong: " + fname_rel_path);
+        return "{\"ok\":true,\"path\":\"" + url_path + "\"}";
     }
     else
     {
@@ -101,6 +131,10 @@ string DeviceController::recordVideo(const string &dur_str, const string &cam, c
         return "{\"ok\":false,\"error\":\"FFmpeg Error. Check device name.\"}";
     }
 }
+
+/**
+ * @brief Xu ly vong lap stream camera (CHO CONG 9001)
+ */
 void DeviceController::handleStreamCam(SOCKET client, const string &clientIP, const string &cam, const string &audio)
 {
     if (cam.empty() || audio.empty())
@@ -108,12 +142,10 @@ void DeviceController::handleStreamCam(SOCKET client, const string &clientIP, co
         logConsole(clientIP, "Loi stream cam: Thieu ten cam/audio.");
         return;
     }
-
-    logConsole(clientIP, "Bat dau stream camera (MJPEG Stream): " + cam);
+    logConsole(clientIP, "Bat dau stream camera (MJPEG Stream - Cong 9001): " + cam);
 
     HANDLE hPipeRead, hPipeWrite;
     SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-
     if (!CreatePipe(&hPipeRead, &hPipeWrite, &sa, 0))
     {
         logConsole(clientIP, "Loi CreatePipe");
@@ -132,27 +164,23 @@ void DeviceController::handleStreamCam(SOCKET client, const string &clientIP, co
     strcpy_s(cmd, cmd_s.c_str());
 
     if (!CreateProcessA(NULL, cmd, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
-    { /* ... */
+    {
+        logConsole(clientIP, "Loi CreateProcessA");
+        CloseHandle(hPipeRead);
+        CloseHandle(hPipeWrite);
         return;
     }
     CloseHandle(hPipeWrite);
 
-    sendTcp(client, "STREAM_START");
+    // === XOA: sendTcp("STREAM_START") ===
+    // (Cong 9001 chi gui video)
 
     char relayBuffer[4096];
     DWORD bytesRead;
-
     while (ReadFile(hPipeRead, relayBuffer, sizeof(relayBuffer), &bytesRead, NULL) && bytesRead > 0)
     {
-        // === THEM LAI: Kiem tra lenh moi ===
-        u_long bytes_available = 0;
-        ioctlsocket(client, FIONREAD, &bytes_available);
-        if (bytes_available > 0)
-        {
-            logConsole(clientIP, "Nhan duoc lenh moi -> Dung stream cam.");
-            break;
-        }
-        // === KET THUC THEM ===
+        // === XOA: ioctlsocket ===
+        // (Luong nay se tu dong ngat khi Gateway dong TCP)
 
         if (send(client, relayBuffer, bytesRead, 0) == SOCKET_ERROR)
         {
