@@ -3,10 +3,38 @@ import { store } from "./store.js";
 import { sendCommand } from "./socket.js";
 import { logActionUI } from "./ui.js";
 
-// Dang ky ham xu ly
+// === FIX: Logic xu ly danh sach thiet bi Thong minh hon ===
 export function handleDevicesData(data) {
+  // 1. Neu Server bao dang quet ("pending" hoac "busy")
+  if (data.status === "refresh_pending" || data.status === "refresh_busy") {
+    const camSelect = document.getElementById("camName");
+
+    // Chi hien thong bao "Dang quet" neu danh sach dang rong
+    if (camSelect && camSelect.options.length === 0) {
+      camSelect.innerHTML = "<option>⏳ Đang quét thiết bị...</option>";
+    } else {
+      // Neu da co danh sach, GIU NGUYEN (khong xoa), chi bao log
+      logActionUI(
+        "Server đang làm mới thiết bị... (Tự động cập nhật sau 2s)",
+        true
+      );
+    }
+
+    // QUAN TRONG: Tu dong hoi lai Server sau 2 giay
+    setTimeout(() => {
+      sendCommand("GET_DEVICES");
+    }, 2000);
+    return; // DUNG HAM TAI DAY -> Khong xoa danh sach cu
+  }
+
+  // 2. Neu Server tra ve du lieu that (status != pending)
   const camSelect = document.getElementById("camName");
   const audioSelect = document.getElementById("audioName");
+
+  // Luu lai thiet bi dang chon hien tai (de khong bi reset ve mac dinh)
+  const currentCam = camSelect.value;
+  const currentAudio = audioSelect.value;
+
   camSelect.innerHTML = "";
   audioSelect.innerHTML = "";
 
@@ -18,8 +46,15 @@ export function handleDevicesData(data) {
       if (cam.toLowerCase().includes("usb")) opt.selected = true;
       camSelect.appendChild(opt);
     });
+    // Khoi phuc lua chon cu (neu thiet bi do van con)
+    if (
+      currentCam &&
+      Array.from(camSelect.options).some((o) => o.value === currentCam)
+    ) {
+      camSelect.value = currentCam;
+    }
   } else {
-    camSelect.innerHTML = "<option value=''>Khong tim thay camera</option>";
+    camSelect.innerHTML = "<option value=''>Không tìm thấy camera</option>";
   }
 
   if (data.audio && data.audio.length > 0) {
@@ -27,18 +62,35 @@ export function handleDevicesData(data) {
       const opt = document.createElement("option");
       opt.value = audio;
       opt.textContent = audio;
-      if (audio.toLowerCase().includes("realtek")) opt.selected = true;
+      if (
+        audio.toLowerCase().includes("realtek") ||
+        audio.toLowerCase().includes("microphone")
+      )
+        opt.selected = true;
       audioSelect.appendChild(opt);
     });
-  } else {
-    audioSelect.innerHTML = "<option value=''>Khong tim thay micro</option>";
+    // Khoi phuc lua chon cu
+    if (
+      currentAudio &&
+      Array.from(audioSelect.options).some((o) => o.value === currentAudio)
+    ) {
+      audioSelect.value = currentAudio;
+    }
+  }
+
+  // Neu day la lan dau tien (server chua quet lan nao), tu kich hoat quet
+  if (data.status === "not_ready") {
+    logActionUI("Dữ liệu chưa sẵn sàng, đang yêu cầu quét...", true);
+    loadDevices(true);
   }
 }
+
+// === FIX: Logic Tai Video va Xoa File Goc ===
 async function downloadAndSaveVideo(path) {
   const stat = document.getElementById("vidStatus");
   stat.textContent = "⬇️ Đang tải video...";
   try {
-    const res = await fetch(path + "?t=" + Date.now()); // Them cache-buster
+    const res = await fetch(path + "?t=" + Date.now()); // Cache-buster
     const blob = await res.blob();
     if (blob.size > 0 && store.db) {
       // Luu vao IndexedDB
@@ -46,10 +98,13 @@ async function downloadAndSaveVideo(path) {
         .transaction(["videos"], "readwrite")
         .objectStore("videos")
         .add({ blob, date: new Date() });
-      loadVidGallery(); // Ham nay da co san trong file
+
+      loadVidGallery();
       stat.textContent = "✅ Đã lưu vào thư viện!";
+
+      // QUAN TRONG: Doi 2 giay de Gateway kip dong file, roi moi xoa
       setTimeout(() => {
-        logActionUI(`Dọn dẹp file server: ${path}`, true); // Đây là log "đã xóa"
+        logActionUI(`Dọn dẹp file server: ${path}`, true);
         sendCommand("DELETE_VIDEO", path);
       }, 2000);
     } else {
@@ -60,19 +115,20 @@ async function downloadAndSaveVideo(path) {
     logActionUI(`Lỗi tải file ${path}: ${e.message}`, false);
   }
 }
+
 export function handleRecordVideoData(data) {
   const stat = document.getElementById("vidStatus");
   const btn = document.getElementById("btnVid");
-  if (data.ok && data.path) {
-    stat.textContent = "✅ Quay thành công!";
-    logActionUI("Server đã quay xong: " + data.path, true);
 
-    // === FIX: GOI HAM TAI FILE VE ===
+  if (data.ok && data.path) {
+    stat.textContent = "✅ Quay thành công! Đang tải...";
+    logActionUI("Server đã quay xong: " + data.path, true);
+    // Goi ham tai file
     downloadAndSaveVideo(data.path);
-    // === KET THUC FIX ===
   } else {
     stat.textContent = `❌ ${data.error || "Lỗi quay."}`;
   }
+
   if (btn) btn.disabled = false;
 }
 
@@ -92,14 +148,18 @@ export function recordVideo() {
   let camName = document.getElementById("camName").value;
   let audioName = document.getElementById("audioName").value;
 
-  if (!camName || !audioName || camName.startsWith("Khong tim")) {
+  if (
+    !camName ||
+    !audioName ||
+    camName.startsWith("Khong tim") ||
+    camName.startsWith("⏳")
+  ) {
     stat.textContent = "❌ Vui lòng chọn camera và micro.";
     return;
   }
   if (btn) btn.disabled = true;
   stat.textContent = `⏳ Đang ra lệnh quay ${dur}s...`;
 
-  // Gui lenh voi payload la object
   sendCommand("RECORD_VIDEO", {
     duration: dur,
     cam: camName,
@@ -142,7 +202,6 @@ export function toggleCamStream(btn) {
   const streamView = document.getElementById("camStreamView");
   const streamStatus = document.getElementById("camStreamStatus");
 
-  // (Giu logic 'btn === null' de app.js (don luong) cu van chay duoc)
   if (btn === null) {
     store.isCamStreamOn = false;
     streamView.src = "";
@@ -160,10 +219,14 @@ export function toggleCamStream(btn) {
   store.isCamStreamOn = !store.isCamStreamOn;
 
   if (store.isCamStreamOn) {
-    // (Toan bo code Bat Stream... giu nguyen)
     const camName = document.getElementById("camName").value;
     const audioName = document.getElementById("audioName").value;
-    if (!camName || !audioName || camName.startsWith("Khong tim")) {
+    if (
+      !camName ||
+      !audioName ||
+      camName.startsWith("Khong tim") ||
+      camName.startsWith("⏳")
+    ) {
       streamStatus.textContent = "❌ Vui lòng chọn Camera và Mic!";
       store.isCamStreamOn = false;
       return;
@@ -181,8 +244,7 @@ export function toggleCamStream(btn) {
 
     sendCommand("START_STREAM_CAM", { cam: camName, audio: audioName });
   } else {
-    // Logic khi tat stream bang nut
-    streamView.src = ""; // Xoa nguon anh
+    streamView.src = "";
     streamView.alt = "Stream đã tắt.";
     const activeBtn = document.getElementById("btnToggleCamStream");
     if (activeBtn) {
@@ -192,8 +254,6 @@ export function toggleCamStream(btn) {
     }
     streamStatus.textContent = "";
     logActionUI("Tắt livestream camera", true);
-
-    // === FIX: Gui lenh dung ===
     sendCommand("STOP_STREAM");
   }
 }

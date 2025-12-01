@@ -1,61 +1,129 @@
-// utils/helpers.cpp (PHIEN BAN HYBRID - DA FIX)
+// utils/helpers.cpp (FINAL: FIX ANSI to UTF-8 for Vietnamese)
 #include "helpers.h"
 #include <fstream>
 #include <array>
 #include <stdexcept>
 #include <shlwapi.h>
 #include <cstdint>
-#include <mutex> // Them include
+#include <mutex>
+#include <iomanip>
+#include <sstream>
+#include <vector> // Can thiet cho vector
 
 using namespace Gdiplus;
 using namespace std;
 
-// Ham cu (cho stream)
-bool sendTcp(SOCKET s, const std::string &data)
+// === HAM CHUYEN DOI: ANSI (Windows) -> UTF-8 (Web) ===
+std::string AnsiToUtf8(const std::string &ansi)
 {
-    if (send(s, data.c_str(), data.length(), 0) == SOCKET_ERROR)
-        return false;
-    if (send(s, "\n", 1, 0) == SOCKET_ERROR)
-        return false;
+    if (ansi.empty())
+        return "";
+
+    // 1. Hoi do dai can thiet de chuyen sang Unicode (Wide Char)
+    int targetLen = MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), -1, NULL, 0);
+    if (targetLen == 0)
+        return ansi;
+
+    // 2. Chuyen sang Unicode
+    std::vector<wchar_t> wstr(targetLen);
+    MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), -1, &wstr[0], targetLen);
+
+    // 3. Hoi do dai can thiet de chuyen tu Unicode sang UTF-8
+    int targetLen8 = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], -1, NULL, 0, NULL, NULL);
+    if (targetLen8 == 0)
+        return ansi;
+
+    // 4. Chuyen sang UTF-8
+    std::vector<char> str8(targetLen8);
+    WideCharToMultiByte(CP_UTF8, 0, &wstr[0], -1, &str8[0], targetLen8, NULL, NULL);
+
+    return std::string(&str8[0]);
+}
+
+bool sendAll(SOCKET s, const char *data, int totalBytes)
+{
+    int bytesSent = 0;
+    while (bytesSent < totalBytes)
+    {
+        int ret = send(s, data + bytesSent, totalBytes - bytesSent, 0);
+        if (ret == SOCKET_ERROR)
+            return false;
+        bytesSent += ret;
+    }
     return true;
 }
 
-// Ham moi (cho cong lenh)
 bool sendCmdTcp(SOCKET s, const std::string &correlationId, const std::string &data, std::mutex &socketMutex)
 {
     std::lock_guard<std::mutex> lock(socketMutex);
-    std::string msg = correlationId + "|" + data + "\n";
-    // === FIX LOI TYPO ===
-    if (send(s, msg.c_str(), msg.length(), 0) == SOCKET_ERROR)
-        return false;
-    return true;
+
+    // 1. Ma hoa toan bo du lieu (bao gom ca chu "JSON ...") sang Base64
+    // Dieu nay dam bao khong co ky tu xuong dong hay ky tu la nao lam hong goi tin
+    std::string b64Data = Base64Encode(data);
+
+    // 2. Gui goi tin voi tien to "B64:" de Gateway nhan biet
+    std::string msg = correlationId + "|B64:" + b64Data + "\n";
+
+    return sendAll(s, msg.c_str(), (int)msg.length());
 }
 
 bool sendStreamFrame(SOCKET s, const std::string &data)
 {
-    uint32_t len = data.size();
-    if (send(s, (const char *)&len, 4, 0) == SOCKET_ERROR)
+    uint32_t len = (uint32_t)data.size();
+    if (!sendAll(s, (const char *)&len, 4))
         return false;
-    if (send(s, data.c_str(), len, 0) == SOCKET_ERROR)
+    if (!sendAll(s, data.c_str(), (int)len))
         return false;
     return true;
 }
-std::string jsonEscape(const std::string &s)
+
+// === HAM NAY DA DUOC CAP NHAT DE TU DONG CHUYEN UTF-8 ===
+std::string jsonEscape(const std::string &raw)
 {
-    std::string out;
+    // BUOC 1: Chuyen toan bo chuoi dau vao sang UTF-8 truoc
+    std::string s = AnsiToUtf8(raw);
+
+    // BUOC 2: Escape cac ky tu dac biet cua JSON
+    std::ostringstream o;
     for (char c : s)
     {
-        if (c == '"')
-            out += "\\\"";
-        else if (c == '\\')
-            out += "\\\\";
-        else if (c == '\n')
-            out += "\\n";
-        else
-            out += c;
+        switch (c)
+        {
+        case '"':
+            o << "\\\"";
+            break;
+        case '\\':
+            o << "\\\\";
+            break;
+        case '\b':
+            o << "\\b";
+            break;
+        case '\f':
+            o << "\\f";
+            break;
+        case '\n':
+            o << "\\n";
+            break;
+        case '\r':
+            o << "\\r";
+            break;
+        case '\t':
+            o << "\\t";
+            break;
+        default:
+            if ((unsigned char)c < '\x20')
+            {
+                o << "\\u" << std::hex << std::setw(4) << std::setfill('0') << (int)((unsigned char)c);
+            }
+            else
+            {
+                o << c;
+            }
+        }
     }
-    return out;
+    return o.str();
 }
+
 std::string Base64Encode(const std::string &data)
 {
     static const char *base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -99,11 +167,9 @@ std::vector<std::string> splitArgs(const std::string &s)
     std::vector<std::string> result;
     std::string current_arg;
     bool in_quote = false;
-
     for (size_t i = 0; i < s.length(); ++i)
     {
         char c = s[i];
-
         if (c == '"')
         {
             in_quote = !in_quote;
@@ -128,13 +194,8 @@ std::vector<std::string> splitArgs(const std::string &s)
             current_arg += c;
         }
     }
-
-    // === FIX LOI KY TU LA ===
     if (!current_arg.empty())
-    {
         result.push_back(current_arg);
-    }
-
     return result;
 }
 
@@ -144,11 +205,9 @@ std::string exec(const char *cmd)
     std::string result;
     FILE *pipe = _popen(cmd, "r");
     if (!pipe)
-        throw std::runtime_error("_popen() failed!");
+        return "ERROR";
     while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
-    {
         result += buffer.data();
-    }
     _pclose(pipe);
     return result;
 }
@@ -165,6 +224,7 @@ std::string readBinaryFile(const std::string &filename)
         return buffer;
     return "";
 }
+
 std::vector<std::string> getLocalIPv4Addresses()
 {
     std::vector<std::string> res;

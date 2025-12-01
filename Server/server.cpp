@@ -59,6 +59,8 @@ void streamAcceptLoop(CommandRouter *router, SOCKET streamListenSocket)
 int main()
 {
     SetConsoleOutputCP(65001);
+    std::cout << "\n\n!!! PHIEN BAN MOI DA DUOC NAP (FIX JSON) !!!\n\n"
+              << std::endl;
     srand((unsigned int)time(0));
 
     GdiplusStartupInput g;
