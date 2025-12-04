@@ -569,3 +569,6 @@ History.load();
 document.getElementById("ipInput").addEventListener("keypress", (e) => {
   if (e.key === "Enter") startConnection();
 });
+if (document.getElementById("lblDeviceId")) {
+  document.getElementById("lblDeviceId").textContent = App.DEVICE_ID;
+}
