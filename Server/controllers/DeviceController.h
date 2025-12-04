@@ -17,8 +17,9 @@ public:
     static void buildDeviceListJson();
     static std::string getDevices(bool refresh = false);
 
-    // Ham tra ve JSON
-    std::string recordVideo(const std::string &dur_str, const std::string &cam, const std::string &audio);
+    void recordVideoAsync(SOCKET client, std::string correlationId,
+                          std::string dur_str, std::string cam, std::string audio,
+                          std::mutex &socketMutex);
 
     // Ham stream (tu quan ly vong lap)
     void handleStreamCam(SOCKET client, const std::string &clientIP, const std::string &cam, const std::string &audio);

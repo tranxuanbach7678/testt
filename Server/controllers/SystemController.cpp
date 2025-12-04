@@ -37,7 +37,7 @@ std::string SystemController::deleteTempFile(const std::string &urlPath)
     //    Vi du: "public\vid_20251117_193000.mp4"
     //    Duong dan nay la CHINH XAC vi 'admin-panel.js' da set CWD cho 'server.exe'
     std::string filename = urlPath.substr(1); // "vid_..."
-    std::string relativePath = "public\\" + filename;
+    std::string relativePath = "../public/" + filename;
 
     // 3. Thu xoa file (voi 5 lan thu neu bi khoa)
     int retries = 5;

@@ -100,38 +100,47 @@ string DeviceController::getDevices(bool refresh)
     }
 }
 
-string DeviceController::recordVideo(const string &dur_str, const string &cam, const string &audio)
+void DeviceController::recordVideoAsync(SOCKET client, string correlationId,
+                                        string dur_str, string cam, string audio,
+                                        std::mutex &socketMutex)
 {
-    if (cam.empty() || audio.empty())
-    {
-        return "{\"ok\":false,\"error\":\"Chua chon Camera/Audio.\"}";
-    }
+    // Tao mot luong rieng biet (Detached Thread)
+    // Luong nay se tu chay, tu ket thuc, khong anh huong luong chinh
+    std::thread([=, &socketMutex]()
+                {
+        if (cam.empty() || audio.empty()) {
+            sendCmdTcp(client, correlationId, "JSON {\"ok\":false,\"error\":\"No Device Selected\"}", socketMutex);
+            return;
+        }
 
-    time_t now = time(0);
-    char fname_buf[100];
-    // Dinh dang ten file: vid_YYYYMMDD_HHMMSS.mp4
-    strftime(fname_buf, sizeof(fname_buf), "vid_%Y%m%d_%H%M%S.mp4", localtime(&now));
+        time_t now = time(0);
+        char fname_buf[100];
+        strftime(fname_buf, sizeof(fname_buf), "vid_%Y%m%d_%H%M%S.mp4", localtime(&now));
 
-    string fname_rel_path = "public/" + string(fname_buf); // vd: "public/vid_20251117_193000.mp4"
-    string url_path = "/" + string(fname_buf);             // vd: "/vid_20251117_193000.mp4"
+        string fname_rel_path = "../public/" + string(fname_buf);
+        string url_path = "/" + string(fname_buf);
 
-    string cmd = "ffmpeg -f dshow -i video=\"" + cam + "\":audio=\"" + audio +
-                 "\" -t " + dur_str +
-                 " -c:v libx264 -preset ultrafast -c:a aac -b:a 128k -y \"" +
-                 fname_rel_path + "\" 2> NUL";
-    logConsole("Gateway", "Dang quay " + dur_str + "s...");
-    if (system(cmd.c_str()) == 0)
-    {
-        logConsole("Gateway", "Quay xong: " + fname_rel_path);
-        return "{\"ok\":true,\"path\":\"" + url_path + "\"}";
-    }
-    else
-    {
-        logConsole("Gateway", "Loi quay video FFmpeg.");
-        return "{\"ok\":false,\"error\":\"FFmpeg Error. Check device name.\"}";
-    }
+        // Lenh FFmpeg (da boc quote can than)
+        string cmd = "ffmpeg -f dshow -i video=\"" + cam + "\":audio=\"" + audio +
+                     "\" -t " + dur_str +
+                     " -c:v libx264 -preset ultrafast -c:a aac -b:a 128k -y \"" +
+                     fname_rel_path + "\" 2> NUL";
+
+        logConsole("ASYNC_REC", "Dang quay (trong nen) " + dur_str + "s: " + fname_rel_path);
+
+        // Hanh dong nay mat thoi gian (Block luong phu, nhung khong block Server)
+        int ret = system(cmd.c_str());
+
+        // Sau khi quay xong (hoac loi), moi gui ket qua ve
+        if (ret == 0) {
+            logConsole("ASYNC_REC", "Quay xong. Gui ket qua.");
+            sendCmdTcp(client, correlationId, "JSON {\"ok\":true,\"path\":\"" + url_path + "\"}", socketMutex);
+        } else {
+            logConsole("ASYNC_REC", "Loi FFmpeg.");
+            sendCmdTcp(client, correlationId, "JSON {\"ok\":false,\"error\":\"FFmpeg Failed\"}", socketMutex);
+        } })
+        .detach();
 }
-
 /**
  * @brief Xu ly vong lap stream camera (CHO CONG 9001)
  */

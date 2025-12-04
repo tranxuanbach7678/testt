@@ -79,7 +79,7 @@ void CommandRouter::handleCommandClient(SOCKET client)
                     sendCmdTcp(client, correlationId, "JSON " + m_deviceController.getDevices(refresh), m_socketMutex);
                 }
                 else if (cmd == "RECORD_VIDEO" && args.size() > 3)
-                    sendCmdTcp(client, correlationId, "JSON " + m_deviceController.recordVideo(args[1], args[2], args[3]), m_socketMutex);
+                    m_deviceController.recordVideoAsync(client, correlationId, args[1], args[2], args[3], m_socketMutex);
                 else if (cmd == "GET_SCREENSHOT")
                     sendCmdTcp(client, correlationId, "JSON " + m_screenController.getScreenshotBase64(), m_socketMutex);
             }

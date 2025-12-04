@@ -22,13 +22,12 @@ export function loadApps() {
 
 export function closeWin(h, path, name) {
   if (confirm("Đóng cửa sổ này?")) {
-    path = decodeURIComponent(path);
     if (path && path !== "Unknown" && path.length > 3) addRecent(path, name);
 
     sendCommand("CLOSE_HWND", h); // Gui lenh
 
     logActionUI(`Đóng: ${name}`, true);
-    setTimeout(loadApps, 500); // Tai lai sau 0.5s
+    setTimeout(loadApps, 1000);
   }
 }
 
@@ -39,16 +38,23 @@ export function startCmd(inpId, statId, cmdOverride = null) {
   const statusEl = document.getElementById(statId);
   if (statusEl) statusEl.textContent = "⏳ ...";
 
-  sendCommand("START_CMD", val); // Gui lenh
+  // 1. Gui lenh MO
+  sendCommand("START_CMD", val);
 
-  logActionUI(`Mở: ${val.split("\\").pop()}`, true);
+  // 2. Them vao danh sach GAN DAY
+  // Lay ten file tu duong dan (vd: C:\Windows\notepad.exe -> notepad.exe)
+  let name = val.split("\\").pop();
+  addRecent(val, name);
+
+  logActionUI(`Mở: ${name}`, true);
 
   if (statusEl) statusEl.textContent = "✅ Đã gửi lệnh";
 
+  // 3. Tai lai danh sach (hy vong no mo kip de hien thi)
   setTimeout(() => {
     if (document.getElementById("tab-apps").classList.contains("active"))
       loadApps();
-  }, 1500);
+  }, 2000); // Apps mo len thuong cham, nen de 2s
 }
 
 // --- TIEN ICH "MO GAN DAY" ---

@@ -1,13 +1,35 @@
 @echo off
-ECHO Khoi dong C++ Logic Server (Cong 9000)...
-:: 'start "Tieu de Cua So"' la lenh de mo mot cua so moi
-start "C++ Logic Server" server.exe
+cd core
+echo Dang khoi dong he thong tu thu muc CORE...
+:: Kiểm tra xem đã cài node_modules chưa, nếu chưa thì cài
+if not exist "node_modules" (
+    echo Phat hien thieu thu vien, dang chay npm install...
+    call npm install
+)
 
-ECHO Khoi dong Node.js Gateway (Cong 8080)...
-:: Cho 1 giay de C++ server khoi dong xong
-timeout /t 1 /nobreak > nul
+@echo off
+TITLE Admin Panel Launcher
 
-:: Chay Node.js trong mot cua so moi
-start "Node.js Gateway" node gateway.js
+ECHO.
+ECHO =================================================
+ECHO  KHOI DONG ADMIN PANEL SERVER (CONG 8000)
+ECHO =================================================
+ECHO.
+ECHO Mo mot cua so console moi de chay server...
+:: 'start "Tieu de"' la de mo cua so moi
+start "Admin Panel Server (Node.js)" node admin-panel.js
 
-ECHO Da khoi dong ca hai server.
+ECHO.
+ECHO Dang cho server khoi dong (2 giay)...
+:: Cho 2 giay de server Node.js khoi dong xong
+timeout /t 2 /nobreak > nul
+
+ECHO.
+ECHO Mo giao dien Admin Panel tren trinh duyet...
+:: Mo URL trong trinh duyet mac dinh
+start http://localhost:8000
+
+ECHO.
+ECHO Hoan tat. Cua so nay se tu dong dong.
+timeout /t 2 /nobreak > nul
+exit

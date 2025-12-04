@@ -50,9 +50,21 @@ const SOI = Buffer.from([0xff, 0xd8]);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*"); // Cho phep moi IP truy cap
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
 const server = http.createServer(app);
-app.use(express.static(path.join(__dirname, "public")));
-console.log(`[SYSTEM] Dang phuc vu file tu: ${path.join(__dirname, "public")}`);
+app.use(express.static(path.join(__dirname, "../public")));
+console.log(
+  `[SYSTEM] Dang phuc vu file tu: ${path.join(__dirname, "../public")}`
+);
 
 const pendingRequests = new Map();
 let cmdIdCounter = 0;
