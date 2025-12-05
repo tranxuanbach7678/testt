@@ -14,6 +14,11 @@ string DeviceController::G_DEVICE_LIST_JSON = "{\"video\":[],\"audio\":[]}";
 std::mutex DeviceController::G_DEVICE_LIST_MUTEX;
 std::atomic<bool> DeviceController::G_IS_REFRESHING(false);
 
+std::vector<SOCKET> DeviceController::viewingClients;
+std::vector<RecordingSession *> DeviceController::recordingSessions;
+std::mutex DeviceController::streamMutex;
+std::atomic<bool> DeviceController::isStreaming(false);
+
 void DeviceController::buildDeviceListJson()
 {
     // Dam bao chi 1 luong duoc refresh
@@ -100,67 +105,36 @@ string DeviceController::getDevices(bool refresh)
     }
 }
 
-void DeviceController::recordVideoAsync(SOCKET client, string correlationId,
-                                        string dur_str, string cam, string audio,
-                                        std::mutex &socketMutex)
+void DeviceController::processFinishedSession(RecordingSession *session)
 {
-    // Tao mot luong rieng biet (Detached Thread)
-    // Luong nay se tu chay, tu ket thuc, khong anh huong luong chinh
-    std::thread([=, &socketMutex]()
-                {
-        if (cam.empty() || audio.empty()) {
-            sendCmdTcp(client, correlationId, "JSON {\"ok\":false,\"error\":\"No Device Selected\"}", socketMutex);
-            return;
-        }
+    session->fileStream.close();
 
-        time_t now = time(0);
-        char fname_buf[100];
-        strftime(fname_buf, sizeof(fname_buf), "vid_%Y%m%d_%H%M%S.mp4", localtime(&now));
+    logConsole("REC", "Dang convert sang MP4: " + session->finalPath);
 
-        string fname_rel_path = "../public/" + string(fname_buf);
-        string url_path = "/" + string(fname_buf);
+    // Convert Mjpeg (raw dump) sang MP4
+    string cmd = "ffmpeg -f mjpeg -r 20 -i \"" + session->tempFilename + "\" -c:v libx264 -preset ultrafast -y \"" + session->finalPath + "\"";
 
-        // Lenh FFmpeg (da boc quote can than)
-        string cmd = "ffmpeg -f dshow -i video=\"" + cam + "\":audio=\"" + audio +
-                     "\" -t " + dur_str +
-                     " -c:v libx264 -preset ultrafast -c:a aac -b:a 128k -y \"" +
-                     fname_rel_path + "\" 2> NUL";
+    system(cmd.c_str());
 
-        logConsole("ASYNC_REC", "Dang quay (trong nen) " + dur_str + "s: " + fname_rel_path);
+    // Xoa file tam
+    remove(session->tempFilename.c_str());
 
-        // Hanh dong nay mat thoi gian (Block luong phu, nhung khong block Server)
-        int ret = system(cmd.c_str());
+    // Gui ket qua ve Client
+    string url_path = "/" + session->finalPath.substr(session->finalPath.find("../public/") + 10); // Cat bo public/
+    sendCmdTcp(session->client, session->correlationId, "JSON {\"ok\":true,\"path\":\"" + url_path + "\"}", *(session->socketMutex));
 
-        // Sau khi quay xong (hoac loi), moi gui ket qua ve
-        if (ret == 0) {
-            logConsole("ASYNC_REC", "Quay xong. Gui ket qua.");
-            sendCmdTcp(client, correlationId, "JSON {\"ok\":true,\"path\":\"" + url_path + "\"}", socketMutex);
-        } else {
-            logConsole("ASYNC_REC", "Loi FFmpeg.");
-            sendCmdTcp(client, correlationId, "JSON {\"ok\":false,\"error\":\"FFmpeg Failed\"}", socketMutex);
-        } })
-        .detach();
+    delete session;
 }
-/**
- * @brief Xu ly vong lap stream camera (CHO CONG 9001)
- */
-void DeviceController::handleStreamCam(SOCKET client, const string &clientIP, const string &cam, const string &audio)
-{
-    if (cam.empty() || audio.empty())
-    {
-        logConsole(clientIP, "Loi stream cam: Thieu ten cam/audio.");
-        return;
-    }
-    logConsole(clientIP, "Bat dau stream camera (MJPEG Stream - Cong 9001): " + cam);
 
+// === HAM BROADCAST (MASTER) ===
+void DeviceController::broadcastWorker(string cam, string audio)
+{
+    logConsole("BROADCAST", "Master Stream KHOI DONG (" + cam + ")");
+
+    // 1. Khoi tao Pipe & FFmpeg (Giu nguyen nhu cu)
     HANDLE hPipeRead, hPipeWrite;
     SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-    if (!CreatePipe(&hPipeRead, &hPipeWrite, &sa, 0))
-    {
-        logConsole(clientIP, "Loi CreatePipe");
-        return;
-    }
-
+    CreatePipe(&hPipeRead, &hPipeWrite, &sa, 0);
     STARTUPINFOA si = {sizeof(STARTUPINFOA)};
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
@@ -174,33 +148,152 @@ void DeviceController::handleStreamCam(SOCKET client, const string &clientIP, co
 
     if (!CreateProcessA(NULL, cmd, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
     {
-        logConsole(clientIP, "Loi CreateProcessA");
+        logConsole("BROADCAST", "Loi khoi tao FFmpeg");
         CloseHandle(hPipeRead);
         CloseHandle(hPipeWrite);
+        isStreaming = false;
         return;
     }
     CloseHandle(hPipeWrite);
 
-    // === XOA: sendTcp("STREAM_START") ===
-    // (Cong 9001 chi gui video)
-
-    char relayBuffer[4096];
+    char buffer[40960];
     DWORD bytesRead;
-    while (ReadFile(hPipeRead, relayBuffer, sizeof(relayBuffer), &bytesRead, NULL) && bytesRead > 0)
-    {
-        // === XOA: ioctlsocket ===
-        // (Luong nay se tu dong ngat khi Gateway dong TCP)
 
-        if (send(client, relayBuffer, bytesRead, 0) == SOCKET_ERROR)
-        {
-            logConsole(clientIP, "Client ngat ket noi (stream loi).");
+    while (isStreaming)
+    {
+        if (!ReadFile(hPipeRead, buffer, sizeof(buffer), &bytesRead, NULL) || bytesRead == 0)
             break;
+
+        lock_guard<mutex> lock(streamMutex);
+
+        // A. DIEU KIEN DUNG: Khong con ai xem VA khong con ai quay
+        if (viewingClients.empty() && recordingSessions.empty())
+        {
+            logConsole("BROADCAST", "Idle (No viewers/recorders). Shutdown.");
+            isStreaming = false;
+            break;
+        }
+
+        // B. GUI CHO VIEWERS
+        for (auto it = viewingClients.begin(); it != viewingClients.end();)
+        {
+            if (send(*it, buffer, bytesRead, 0) == SOCKET_ERROR)
+            {
+                closesocket(*it);
+                it = viewingClients.erase(it);
+            }
+            else
+                ++it;
+        }
+
+        // C. GHI CHO RECORDERS
+        time_t now = time(0);
+        for (auto it = recordingSessions.begin(); it != recordingSessions.end();)
+        {
+            RecordingSession *sess = *it;
+
+            // Ghi du lieu vao file
+            sess->fileStream.write(buffer, bytesRead);
+
+            // Kiem tra het gio
+            if (now >= sess->endTime)
+            {
+                // Xoa khoi danh sach truoc
+                it = recordingSessions.erase(it);
+
+                // Chay thread xu ly convert & gui json (tach biet de khong block stream)
+                std::thread(processFinishedSession, sess).detach();
+            }
+            else
+            {
+                ++it;
+            }
         }
     }
 
-    logConsole(clientIP, "Dung stream camera (MJPEG).");
-    TerminateProcess(pi.hProcess, 1);
+    TerminateProcess(pi.hProcess, 0);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
     CloseHandle(hPipeRead);
+
+    // Cleanup de an toan
+    lock_guard<mutex> lock(streamMutex);
+    isStreaming = false;
+}
+
+// === HAM QUAY VIDEO (CHI DANG KY SESSION) ===
+void DeviceController::recordVideoAsync(SOCKET client, string correlationId,
+                                        string dur_str, string cam, string audio,
+                                        std::mutex &socketMutex)
+{
+    lock_guard<mutex> lock(streamMutex);
+
+    int duration = 5;
+    try
+    {
+        duration = stoi(dur_str);
+    }
+    catch (...)
+    {
+    }
+
+    time_t now = time(0);
+    char fname_buf[100];
+    strftime(fname_buf, sizeof(fname_buf), "vid_%Y%m%d_%H%M%S", localtime(&now));
+
+    // Tao session moi
+    RecordingSession *sess = new RecordingSession();
+    sess->client = client;
+    sess->correlationId = correlationId;
+    sess->socketMutex = &socketMutex;
+    sess->endTime = now + duration + 1;
+
+    // Ten file: session nay se co hau to rieng de khong trung nhau neu 2 client cung quay
+    // Them ID ngau nhien vao ten file
+    string randId = to_string(rand() % 1000);
+
+    // File tam (chua raw mjpeg data)
+    sess->tempFilename = "../public/" + string(fname_buf) + "_" + randId + ".mjpeg";
+    // File cuoi (mp4) - Day la path ma Server.exe nhin thay (tu thu muc core)
+    sess->finalPath = "../public/" + string(fname_buf) + "_" + randId + ".mp4";
+
+    sess->fileStream.open(sess->tempFilename, ios::binary);
+
+    if (!sess->fileStream.is_open())
+    {
+        sendCmdTcp(client, correlationId, "JSON {\"ok\":false,\"error\":\"Cannot create file\"}", socketMutex);
+        delete sess;
+        return;
+    }
+
+    recordingSessions.push_back(sess);
+    logConsole("REC", "Da dang ky quay " + dur_str + "s. File: " + sess->tempFilename);
+
+    // Neu stream chua chay thi bat no len
+    if (!isStreaming)
+    {
+        isStreaming = true;
+        std::thread(broadcastWorker, cam, audio).detach();
+    }
+}
+
+// === HAM LIVE STREAM (GIU KET NOI) ===
+void DeviceController::handleStreamCam(SOCKET client, const string &clientIP, const string &cam, const string &audio)
+{
+    {
+        lock_guard<mutex> lock(streamMutex);
+        viewingClients.push_back(client);
+        if (!isStreaming)
+        {
+            isStreaming = true;
+            std::thread(broadcastWorker, cam, audio).detach();
+        }
+    }
+
+    char dummy[10];
+    while (true)
+    {
+        if (recv(client, dummy, sizeof(dummy), 0) <= 0)
+            break;
+    }
 }
