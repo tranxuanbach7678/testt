@@ -22,6 +22,7 @@
 #pragma comment(lib, "Psapi.lib")
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "Ole32.lib")
+#pragma comment(lib, "winmm.lib")
 
 using namespace Gdiplus;
 using namespace std;
