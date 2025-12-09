@@ -95,26 +95,25 @@ int main()
     cout << "-------------------------------------------------\n"
          << endl;
 
-    // === 3. Tao 1 Router duy nhat ===
+    // Tạo 1 Router duy nhất
     CommandRouter router;
 
-    // === 4. Tao 1 luong rieng de chap nhan stream (Cong 9001) ===
+    // Tạo 1 luồng riêng để chấp nhận stream
     thread streamThread(streamAcceptLoop, &router, streamListenSocket);
-    streamThread.detach(); // Cho luong nay tu chay
+    streamThread.detach();
 
-    // === 5. Luong chinh chap nhan ket noi Lenh (Cong 9000) ===
-    // Chi chap nhan 1 ket noi tu Gateway, va giu mai mai
+    // Luồng chính chấp nhận kết nối Lệnh. Chỉ chấp nhận 1 kết nối từ Gateway và giữ mãi mãi.
     while (true)
     {
         sockaddr_in cmd_client_addr;
         int cmd_client_len = sizeof(cmd_client_addr);
         SOCKET cmdClient = accept(cmdListenSocket, (sockaddr *)&cmd_client_addr, &cmd_client_len);
 
-        // Khi Gateway ket noi, dua no cho CommandRouter xu ly
-        // Ham nay se block luong main (OK) cho den khi Gateway bi dong
+        // Khi Gateway kết nối, chuyển sang CommandRouter xử lý
+        // Hàm lúc này sẽ bị block luồng main cho đến khi Gateway đóng
         router.handleCommandClient(cmdClient);
 
-        // Neu Gateway bi dong, quay lai cho ket noi moi
+        // Nếu Gateway đóng, lặp lại để chờ kết nối mới
         cout << "[WARN] Gateway (Cong Lenh) bi ngat, cho ket noi lai..." << endl;
     }
 
