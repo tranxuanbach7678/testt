@@ -57,7 +57,20 @@ body.dark-mode {
    ============================================ */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: var(--bg);
+  
+  /* --- BẮT ĐẦU PHẦN SỬA ẢNH NỀN --- */
+  background-color: var(--bg); /* Màu nền dự phòng */
+  
+  /* Chèn ảnh và phủ một lớp đen mờ 50% để dễ đọc chữ */
+  /* Nhớ thay 'background.jpg' bằng tên file ảnh thực tế của bạn */
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('./image/background.jpg');
+  
+  background-size: cover;       /* Ảnh luôn phủ kín màn hình */
+  background-position: center;  /* Ảnh luôn canh giữa */
+  background-repeat: no-repeat; /* Không lặp lại ảnh */
+  background-attachment: fixed; /* Cố định ảnh khi cuộn chuột */
+  /* --- KẾT THÚC PHẦN SỬA --- */
+
   color: var(--text);
   min-height: 100vh;
   padding: 10px;
@@ -67,7 +80,7 @@ body {
 }
 
 /* Christmas Decorative Elements */
-body::before {
+/* body::before {
   content: "❄️";
   position: fixed;
   top: 10%;
@@ -89,6 +102,31 @@ body::after {
   pointer-events: none;
   z-index: 1;
   opacity: 0.5;
+} */
+
+/* --- HIỆU ỨNG TUYẾT RƠI (JS) --- */
+.snowflake {
+  position: fixed;
+  top: -50px;
+  color: #fff;
+  pointer-events: none; /* Để bấm xuyên qua tuyết */
+  z-index: 9999;        /* Luôn nổi lên trên */
+  opacity: 0.8;
+  animation-name: snowfall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Giữ nguyên keyframes snowfall cũ nếu có, nếu chưa có thì thêm: */
+@keyframes snowfall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0.2;
+  }
 }
 
 @keyframes snowfall {
@@ -642,14 +680,14 @@ tbody tr:hover {
   position: relative;
 }
 
-.screen-box::before {
+/* .screen-box::before {
   content: "🎬";
   position: absolute;
   top: 15px;
   right: 15px;
   font-size: 30px;
   opacity: 0.3;
-}
+} */
 
 #screenImg,
 #screenStreamView,
@@ -1129,4 +1167,11 @@ tbody tr:hover {
 /* Đảm bảo body không bị tràn ngang gây lag */
 body {
     overflow-x: hidden;
+}
+
+/* --- FIX LỖI HIỂN THỊ DANH SÁCH (OPTION) --- */
+select.input-field option {
+    background-color: #333 !important; /* Nền màu tối */
+    color: #fff !important;            /* Chữ màu trắng */
+    padding: 10px;
 }
