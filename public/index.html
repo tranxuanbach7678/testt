@@ -276,11 +276,6 @@
             <select id="camName" class="input-field"></select>
           </div>
 
-          <!-- <div class="control-row" style="margin-bottom: 10px; display: none">
-            <label for="audioName" style="width: 100px">Microphone:</label>
-            <select id="audioName" class="input-field"></select>
-          </div> -->
-
           <div class="control-row" style="margin-bottom: 10px;">
             <label for="audioName" style="width: 100px">Microphone:</label>
             <select id="audioName" class="input-field">
@@ -457,21 +452,16 @@
     <script src="/app.js" type="module"></script>
 
     <script>
-      // Trạng thái tuyết (Mặc định là Bật)
       window.isSnowOn = true;
-
-      // Hàm bật tắt được gọi khi bấm nút
       window.toggleSnow = function() {
-        window.isSnowOn = !window.isSnowOn; // Đảo trạng thái
+        window.isSnowOn = !window.isSnowOn;
         
-        // Ẩn/Hiện toàn bộ bông tuyết
         const snows = document.querySelectorAll('.snowflake');
         snows.forEach(s => {
           s.style.display = window.isSnowOn ? 'block' : 'none';
         });
       };
 
-      // Logic tạo tuyết (Tự động chạy)
       (function() {
         const snowflakeCount = 15; 
         const symbols = ['❄️', '❅', '❆'];
@@ -484,7 +474,6 @@
           const size = Math.random() * 20 + 15;
           flake.style.fontSize = `${size}px`;
           
-          // Random vị trí 2 bên lề
           let leftPos;
           if (Math.random() > 0.5) {
              leftPos = Math.random() * 15; 
