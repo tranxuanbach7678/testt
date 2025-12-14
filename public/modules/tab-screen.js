@@ -221,19 +221,27 @@ function handleMouseUp(event) {
 // === XỬ LÝ SỰ KIỆN BÀN PHÍM ===
 function handleKeyDown(event) {
   if (!store.isScreenStreamOn || !isKeyboardControlEnabled) return;
-  
+  event.preventDefault();
   // Chặn các phím đặc biệt
-  if (['F5', 'F11', 'F12'].includes(event.key) || 
-      (event.ctrlKey && ['w', 't', 'r', 'n'].includes(event.key.toLowerCase()))) {
-    event.preventDefault();
+  if (event.isComposing || event.keyCode === 229) {
+    return;
   }
+  // -------------------------------
+
+  event.preventDefault(); 
   
   sendCommand(`INPUT_KEY down ${event.keyCode}`);
 }
 
 function handleKeyUp(event) {
   if (!store.isScreenStreamOn || !isKeyboardControlEnabled) return;
-  sendCommand(`INPUT_KEY up ${event.keyCode}`);
+
+  // Cũng chặn ở keyUp cho đồng bộ
+  if (event.isComposing || event.keyCode === 229) {
+    return;
+  }
+sendCommand(`INPUT_KEY up ${event.keyCode}`);
 }
+
 window.toggleRemoteInput = toggleRemoteInput;
 
