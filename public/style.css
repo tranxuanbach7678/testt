@@ -1,386 +1,179 @@
-/* ============================================
-   🎄 CHRISTMAS LANDING PAGE STYLE 🎅
-   Inspired by festive decorative design
-   ============================================ */
+/* client/style.css - Full Content */
 
 :root {
-  --christmas-red: #ff385c;
-  --christmas-white: #ffffff;
-  --christmas-green: #00b67a;
-  --christmas-dark-green: #0d4d3d;
-  --christmas-gold: #ffc107;
-  --christmas-orange: #ff9800;
-  --primary: #ff385c;
-  --bg: #ff385c;
-  --container-bg: #0d4d3d;
-  --text: #ffffff;
-  --text-muted: #b8d4ce;
-  --danger: #ff6b6b;
-  --success: #51cf66;
-  --header-bg: #00b67a;
+  --primary: #007bff;
+  --bg: #f0f2f5;
+  --container-bg: #fff;
+  --text: #333;
+  --text-muted: #666;
+  --danger: #dc3545;
+  --success: #28a745;
+  --header-bg: #222;
   --header-text: #fff;
-  --border: #1a6b54;
-  --card-bg: rgba(13, 77, 61, 0.8);
-  --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  --tab-bg: rgba(0, 182, 122, 0.3);
-  --tab-hover: rgba(255, 56, 92, 0.2);
-  --tab-active-bg: #ff385c;
-  --input-bg: rgba(255, 255, 255, 0.1);
-  --input-border: rgba(255, 255, 255, 0.3);
-  --table-head-bg: rgba(0, 0, 0, 0.2);
-  --table-hover: rgba(255, 255, 255, 0.05);
-  --recent-bg: rgba(0, 0, 0, 0.2);
-  --tag-bg: #ffc107;
-  --log-bg: rgba(0, 0, 0, 0.3);
-  --log-border: rgba(255, 255, 255, 0.2);
+  --border: #eee;
+  --card-bg: #fff;
+  --card-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  --tab-bg: #eee;
+  --tab-hover: #e0e0e0;
+  --tab-active-bg: #fff;
+  --input-bg: #fff;
+  --input-border: #ddd;
+  --table-head-bg: #f8f9fa;
+  --table-hover: #f8f9fa;
+  --recent-bg: #f9f9f9;
+  --tag-bg: #e9ecef;
+  --log-bg: #f8f9fa;
+  --log-border: #ddd;
 }
 
 body.dark-mode {
-  --bg: #2d0a1f;
-  --container-bg: #1a0d15;
-  --card-bg: rgba(26, 13, 21, 0.9);
-  --header-bg: #00b67a;
-  --tab-bg: rgba(0, 182, 122, 0.2);
-  --input-bg: rgba(255, 255, 255, 0.05);
-  --table-head-bg: rgba(0, 0, 0, 0.4);
-  --recent-bg: rgba(0, 0, 0, 0.3);
+  --primary: #00e5ff;
+  --bg: #050505;
+  --container-bg: #111;
+  --text: #e0e0e0;
+  --text-muted: #aaa;
+  --danger: #ff2a6d;
+  --success: #05ffa1;
+  --header-bg: #000;
+  --header-text: #00e5ff;
+  --border: #333;
+  --card-bg: #161616;
+  --card-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
+  --tab-bg: #0a0a0a;
+  --tab-hover: #222;
+  --tab-active-bg: #161616;
+  --input-bg: #222;
+  --input-border: #444;
+  --table-head-bg: #1a1a1a;
+  --table-hover: #222;
+  --recent-bg: #1a1a1a;
+  --tag-bg: #333;
+  --log-bg: #000;
+  --log-border: #333;
 }
 
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
-
-/* ============================================
-   🎨 BODY & BACKGROUND
-   ============================================ */
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg);
   color: var(--text);
-  min-height: 100vh;
+  margin: 0;
   padding: 10px;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow-x: hidden;
+  transition: background-color 0.3s, color 0.3s;
 }
 
-/* Christmas Decorative Elements */
-body::before {
-  content: "❄️";
-  position: fixed;
-  top: 10%;
-  left: 5%;
-  font-size: 40px;
-  animation: snowfall 15s linear infinite;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.6;
-}
-
-body::after {
-  content: "❄️";
-  position: fixed;
-  top: -50px;
-  right: 8%;
-  font-size: 35px;
-  animation: snowfall 18s linear infinite 3s;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.5;
-}
-
-@keyframes snowfall {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100vh) rotate(360deg);
-    opacity: 0;
-  }
-}
-
-/* ============================================
-   🎁 CONTAINER - Green Frame Style
-   ============================================ */
 .container {
   max-width: 900px;
   margin: 0 auto;
   background: var(--container-bg);
-  border-radius: 20px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   overflow: hidden;
-  border: 15px solid var(--header-bg);
-  position: relative;
+  border: 1px solid var(--border);
 }
-
-/* ============================================
-   🎅 HEADER - Green Nav Bar
-   ============================================ */
 header {
   background: var(--header-bg);
   color: var(--header-text);
-  padding: 25px 20px;
+  padding: 15px 20px;
+  text-align: center;
   display: flex;
-  
-  /* [CHỈNH SỬA] Đổi từ 'space-between' sang 'flex-end' để đẩy nút sang phải */
-  justify-content: flex-end; 
-  
+  justify-content: space-between;
   align-items: center;
   position: relative;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
-
 header h1 {
-  /* [CHỈNH SỬA] Tăng kích thước chữ (cũ là 1.2em) */
-  font-size: 2.2em; 
-  
-  font-weight: 700;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  letter-spacing: 0.5px;
   margin: 0;
-  
-  /* Giữ nguyên các dòng này để tiêu đề luôn nằm chính giữa màn hình */
-  position: absolute;
-  top: 7px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: max-content; /* Đảm bảo chữ không bị ngắt dòng không mong muốn */
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.2); }
+  flex-grow: 1;
+  text-align: center;
 }
 
 .theme-toggle-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  color: #fff;
+  background: transparent;
+  border: 1px solid var(--header-text);
+  color: var(--header-text);
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
   border-radius: 4px;
-  font-weight: 700;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
 }
-
 .theme-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.client-info {
-  background: rgba(255, 56, 92, 0.9);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  color: #fff;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  backdrop-filter: blur(10px);
-  font-family: monospace;
-  box-shadow: 0 4px 15px rgba(255, 56, 92, 0.4);
-}
-
-/* ============================================
-   🎯 TABS - Christmas Style
-   ============================================ */
 .tabs-scroll {
-  /* --- Giữ nguyên các dòng cũ --- */
+  overflow-x: auto;
   background: var(--tab-bg);
-  border-bottom: 3px solid var(--christmas-gold);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 4px;
-  margin-bottom: 15px;
-
-  /* --- THÊM/SỬA CÁC DÒNG QUAN TRỌNG NÀY --- */
-  position: relative;  /* Làm điểm tựa cho ảnh tuyết */
-  overflow: visible;   /* Để tuyết nhô lên trên không bị khuất */
-
 }
-
-.tabs-scroll::after {
-  content: "";
-  position: absolute;
-  
-  /* Căn chỉnh vị trí */
-  top: -25px;   /* Đẩy ảnh lên trên mép tab khoảng 28px (bạn có thể chỉnh số này) */
-  left: -15px;   /* Chỉnh sang trái chút để phủ kín viền bo tròn */
-  right: -5px;  /* Chỉnh sang phải chút */
-  
-  /* Kích thước */
-  height: 55px; /* Chiều cao của lớp tuyết (chỉnh to nhỏ tùy ý thích) */
-  width: calc(100% + 30px); /* Rộng hơn khung một chút để đẹp hơn */
-  
-  /* Chèn ảnh */
-  background-image: url('image/snow_cap1.png'); /* Đảm bảo đường dẫn đúng */
-  background-size: 100% 100%; /* Kéo dãn ảnh phủ kín chiều ngang */
-  background-repeat: no-repeat;
-  
-  /* Quan trọng: Cho phép bấm xuyên qua tuyết */
-  pointer-events: none; 
-  z-index: 100; /* Nằm đè lên trên cùng */
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2)); /* Tạo bóng nhẹ cho tuyết thêm 3D */
-}
-
 .tabs {
   display: flex;
-  position: relative;
   min-width: max-content;
+  position: relative;
 }
-
 .tab-btn {
   flex: 1;
-  display: flex;               /* [MỚI] Dùng Flexbox để căn chỉnh */
-  justify-content: center;     /* [MỚI] Căn giữa theo chiều ngang */
-  align-items: center;         /* [MỚI] Căn giữa theo chiều dọc */
-  gap: 8px;                    /* [MỚI] Khoảng cách giữa Icon và Chữ */
-  
-  padding: 17px 5px;           /* [CHỈNH SỬA] Giảm padding để nút gọn hơn */
+  padding: 12px 20px;
   border: none;
   background: none;
   cursor: pointer;
-  font-weight: 700;            /* Giữ độ đậm để dễ đọc trên nền tối */
-  font-size: 12px;             /* [CHỈNH SỬA] Giảm kích thước chữ xuống 12px */
-  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  color: var(--text-muted);
   white-space: nowrap;
-  transition: all 0.3s ease;
-  position: relative;
-  border-radius: 20px;
+  transition: all 0.1s ease;
 }
-
-
 .tab-btn:not(.active):hover {
   background: var(--tab-hover);
-  color: #fff;
+  color: var(--text);
 }
-
 .tab-btn.active {
-  color: #fff;
+  color: var(--primary);
   background: var(--tab-active-bg);
 }
-
 #tab-slider {
   position: absolute;
   bottom: 0;
   height: 3px;
-  background: var(--christmas-gold);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--primary);
+  transition: left 0.1s ease-out, width 0.1s ease-out;
 }
 
-/* ============================================
-   🎄 DECORATIVE PATTERN BACKGROUND
-   ============================================ */
 .tab-content {
   display: none;
   padding: 20px;
-  animation: fadeIn 0.5s ease;
-  background-image: 
-    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
-  background-size: 400px 400px;
-  position: relative;
+  animation: fadeIn 0.3s;
 }
-
-@keyframes swing {
-  0%, 100% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
-}
-
 .tab-content.active {
   display: block;
 }
-
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
-/* ============================================
-   🎁 CARDS - Festive Style
-   ============================================ */
 .card {
   background: var(--card-bg);
-  border: 3px solid var(--border);
-  border-radius: 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   padding: 15px;
   margin-bottom: 20px;
   box-shadow: var(--card-shadow);
-  transition: all 0.4s ease;
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(20px);
 }
-
-.card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 10px; 
-  background: repeating-linear-gradient(
-    45deg,
-    var(--christmas-red),
-    var(--christmas-red) 15px,
-    var(--christmas-white) 15px,
-    var(--christmas-white) 30px
-  );
-  border-radius: 17px 17px 0 0;
-  z-index: 1;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  border-color: var(--christmas-gold);
-}
-
-.card h3 {
-  color: var(--christmas-gold);
-  font-size: 1.3em;
-  margin-bottom: 15px;
-  font-weight: 700;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.card.full-height {
-  display: flex;
-  flex-direction: column;
-}
-
 .card-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
 }
-
-.card-head h3 {
-  margin-bottom: 0;
-}
-
-/* ============================================
-   🎮 CONTROLS & INPUTS
-   ============================================ */
 .control-row {
   display: flex;
   gap: 10px;
   margin: 10px 0;
   align-items: center;
-  flex-wrap: wrap;
 }
 
 input[type="text"],
@@ -388,244 +181,134 @@ input[type="number"],
 .search-box,
 select.input-field {
   flex: 1;
-  padding: 10px 15px;
-  border: 2px solid var(--input-border);
-  border-radius: 15px;
+  padding: 10px;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
   font-size: 14px;
-  background: var(--input-bg);
+  background-color: var(--input-bg);
   color: var(--text);
-  transition: all 0.3s ease;
-  min-width: 200px;
-  font-weight: 600;
-  backdrop-filter: blur(10px);
 }
-
 .search-box {
   width: 100%;
   margin-bottom: 10px;
 }
 
-input:focus,
-select:focus,
-.search-box:focus {
-  outline: none;
-  border-color: var(--christmas-gold);
-  box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.2);
-  background: rgba(255, 255, 255, 0.15);
-}
-
-input::placeholder,
-select::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-/* ============================================
-   🔘 BUTTONS - Christmas Colors
-   ============================================ */
 button {
   cursor: pointer;
-  padding: 10px 20px;
-  border-radius: 15px;
+  padding: 10px 16px;
+  border-radius: 6px;
   border: none;
-  font-weight: 700;
-  font-size: 14px;
+  font-weight: bold;
   transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
-
-/* Tắt hiệu ứng bóng tròn */
-button::before {
-  display: none;
-}
-
 button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  filter: brightness(0.85);
+  opacity: 1;
 }
-
-button:active {
-  transform: translateY(-1px);
-}
-
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
-  filter: grayscale(60%);
+  filter: none;
 }
-
-button:disabled:hover {
-  transform: none;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #ff385c, #ff6b9d);
-  color: #fff;
-}
-
-.btn-refresh {
-  background: linear-gradient(135deg, #00b67a, #00e697);
-  color: #fff;
-}
-
-.btn-danger {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-  color: #fff;
-}
-
 .btn-warning {
-  background: linear-gradient(135deg, #ffc107, #ffda44);
+  background: #ffc107;
   color: #000;
 }
+.btn-warning:hover {
+  background: #e0a800;
+}
 
+/* Nút Mute khi bị tắt tiếng */
 button.muted {
-  background: linear-gradient(135deg, #6c757d, #5a6268);
+  background: #6c757d;
   color: #fff;
   text-decoration: line-through;
-  opacity: 0.7;
 }
-
-.big-btn {
-  padding: 25px 50px;
-  font-size: 1.4em;
-  min-width: 250px;
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
 }
-
-/* ============================================
-   ℹ️ STATUS MESSAGES
-   ============================================ */
+body.dark-mode .btn-primary {
+  color: #000;
+}
+.btn-refresh {
+  background: var(--tag-bg);
+  color: var(--text);
+  border: 1px solid var(--input-border);
+}
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
 .status {
-  min-height: 28px;
-  font-size: 1em;
-  color: var(--christmas-gold);
-  margin-top: 15px;
-  font-weight: 700;
-  padding: 12px 18px;
-  background: rgba(255, 193, 7, 0.15);
-  border-radius: 12px;
-  border-left: 5px solid var(--christmas-gold);
-  backdrop-filter: blur(10px);
+  height: 20px;
+  font-size: 0.9em;
+  color: var(--primary);
+  margin-top: 5px;
 }
 
-/* ============================================
-   📋 TABLES
-   ============================================ */
 .table-wrapper {
   max-height: 450px;
   overflow-y: auto;
-  border: 3px solid var(--border);
-  border-radius: 15px;
-  background: var(--card-bg);
-  flex: 1;
-  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
-
 table {
   width: 100%;
   border-collapse: collapse;
 }
-
 th {
   position: sticky;
   top: 0;
   background: var(--table-head-bg);
-  color: var(--christmas-gold);
-  z-index: 10;
+  color: var(--text);
+  z-index: 1;
   text-align: left;
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.9em;
-  letter-spacing: 1px;
-  backdrop-filter: blur(10px);
 }
-
-th, td {
+th,
+td {
   padding: 12px;
   border-bottom: 1px solid var(--border);
 }
-
-tbody tr {
-  transition: all 0.3s ease;
-}
-
-tbody tr:hover {
+tr:hover {
   background: var(--table-hover);
-  transform: scale(1.01);
 }
-
 .app-title {
   font-size: 0.85em;
   color: var(--text-muted);
   display: block;
-  margin-top: 6px;
-  font-style: italic;
+  margin-top: 4px;
 }
-
-/* ============================================
-   🏷️ TAGS & RECENT LIST
-   ============================================ */
 .recent-list {
   margin-top: 10px;
-  padding: 15px;
+  padding: 10px;
   background: var(--recent-bg);
-  border-radius: 15px;
-  border: 2px solid var(--border);
-  backdrop-filter: blur(10px);
+  border-radius: 6px;
+  border: 1px solid var(--border);
 }
-
-.recent-list small {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: 700;
-  color: var(--christmas-gold);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-#recentListTags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
 .tag {
   display: inline-block;
   background: var(--tag-bg);
-  color: #000;
-  padding: 6px 15px;
-  border-radius: 25px;
+  color: var(--text);
+  padding: 4px 10px;
+  border-radius: 15px;
+  margin: 5px 5px 0 0;
   font-size: 0.9em;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.3s ease;
-  font-weight: 700;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: 1px solid transparent;
 }
-
 .tag:hover {
-  border-color: var(--christmas-red);
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 20px rgba(255, 56, 92, 0.4);
+  border-color: var(--primary);
 }
 
-/* ============================================
-   🖼️ SCREEN BOX
-   ============================================ */
 .vid-duration-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  max-width: 250px;
 }
-
 .vid-duration-wrapper label {
   white-space: nowrap;
-  font-weight: 700;
-  color: var(--text);
 }
 
 .screen-box {
@@ -634,23 +317,11 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 15px;
+  border-radius: 6px;
   overflow: hidden;
   margin-top: 15px;
-  border: 5px solid var(--christmas-gold);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-  position: relative;
+  border: 1px solid var(--border);
 }
-
-.screen-box::before {
-  content: "🎬";
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  font-size: 30px;
-  opacity: 0.3;
-}
-
 #screenImg,
 #screenStreamView,
 #camStreamView {
@@ -659,9 +330,6 @@ tbody tr:hover {
   display: block;
 }
 
-/* ============================================
-   🖼️ GALLERY
-   ============================================ */
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -669,263 +337,173 @@ tbody tr:hover {
   margin-top: 15px;
   max-height: 300px;
   overflow-y: auto;
-  padding: 10px;
 }
-
 .gallery-item {
   position: relative;
   cursor: pointer;
-  border: 4px solid transparent;
-  border-radius: 15px;
-  overflow: hidden;
-  transition: all 0.4s ease;
-  background: #000;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  border: 2px solid transparent;
 }
-
 .gallery-item:hover {
-  border-color: var(--christmas-gold);
-  transform: scale(1.1) rotate(3deg);
-  box-shadow: 0 15px 35px rgba(255, 193, 7, 0.6);
-  z-index: 10;
+  border-color: var(--primary);
 }
-
-.gallery-item img,
+.gallery-item img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+}
 .gallery-item video {
   width: 100%;
   height: 80px;
   object-fit: cover;
+  border-radius: 4px;
   display: block;
+  background: #000;
 }
 
-/* ============================================
-   ⌨️ KEYLOG
-   ============================================ */
 #logArea {
   width: 100%;
   height: 300px;
-  padding: 15px;
-  border: 3px solid var(--log-border);
-  border-radius: 15px;
-  font-family: 'Courier New', monospace;
+  padding: 10px;
+  border: 1px solid var(--log-border);
+  border-radius: 6px;
+  font-family: monospace;
   white-space: pre-wrap;
   background: var(--log-bg);
-  color: var(--christmas-gold);
+  color: var(--text);
   resize: vertical;
-  font-size: 14px;
-  line-height: 1.6;
-  backdrop-filter: blur(10px);
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
 }
-
+body.dark-mode #logArea {
+  color: var(--success);
+}
+.warning-zone {
+  border-left: 5px solid var(--danger);
+  background: rgba(220, 53, 69, 0.1);
+}
+.big-btn {
+  padding: 15px 30px;
+  font-size: 1.2em;
+}
 .keylog-toggle-label {
-  font-size: 17px;
+  font-size: 16px;
   display: flex;
   align-items: center;
   cursor: pointer;
-  user-select: none;
-  font-weight: 700;
-  color: var(--text);
 }
-
 .keylog-toggle-cb {
-  width: 24px;
-  height: 24px;
-  margin-right: 12px;
-  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
 }
 
-/* ============================================
-   ⚠️ WARNING ZONE
-   ============================================ */
-.warning-zone {
-  border-left: 8px solid var(--danger);
-  background: rgba(255, 107, 107, 0.15);
-  animation: pulseGlow 2s ease-in-out infinite;
-  border-radius: 20px;
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 20px 5px rgba(255, 107, 107, 0.3);
-  }
-}
-
-.warning-zone h3 {
-  color: var(--danger);
-}
-
-/* ============================================
-   📝 ACTION LOG - Floating Panel
-   ============================================ */
 .action-log-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
   width: 300px;
   background: var(--card-bg);
-  border-radius: 20px;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   overflow: hidden;
-  border: 4px solid var(--christmas-gold);
-  animation: slideInRight 0.6s ease;
-  backdrop-filter: blur(20px);
+  font-size: 13px;
+  border: 1px solid var(--border);
 }
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(450px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
 .action-log-header {
-  background: linear-gradient(135deg, var(--christmas-red), var(--christmas-orange));
+  background: #333;
   color: #fff;
-  padding: 10px 15px;
+  padding: 8px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 14px;
+  font-weight: bold;
 }
-
-.action-log-header button {
-  padding: 4px 12px;
-  font-size: 18px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  font-weight: 700;
+body.dark-mode .action-log-header {
+  background: var(--primary);
+  color: #000;
 }
-
 .action-log-list {
-  transition: all 0.5s ease;
+  transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
   overflow: hidden;
   max-height: 200px;
-  padding: 8px 0;
-  overflow-y: auto;
+  padding: 5px 0;
+  background: var(--card-bg);
 }
-
 .action-log-list.minimized {
   max-height: 0;
-  padding: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
-
 .log-item {
-  padding: 8px 15px;
+  padding: 6px 12px;
   border-bottom: 1px solid var(--border);
   word-break: break-word;
-  transition: all 0.3s ease;
-  font-size: 13px;
+  color: var(--text);
 }
-
-.log-item:hover {
-  background: var(--table-hover);
-  padding-left: 20px;
-}
-
 .log-item.success {
-  border-left: 5px solid var(--success);
-  background: rgba(81, 207, 102, 0.15);
+  border-left: 4px solid var(--success);
+  background-color: rgba(40, 167, 69, 0.1);
 }
-
 .log-item.error {
-  border-left: 5px solid var(--danger);
-  background: rgba(255, 107, 107, 0.15);
+  border-left: 4px solid var(--danger);
+  background-color: rgba(220, 53, 69, 0.1);
 }
-
 .log-time {
   font-size: 0.85em;
-  color: var(--christmas-gold);
-  margin-right: 8px;
-  font-weight: 700;
+  color: var(--text-muted);
+  margin-right: 5px;
 }
 
-/* ============================================
-   ℹ️ PROJECT INFO
-   ============================================ */
 .project-info-box {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
   max-width: 900px;
   margin: 20px auto;
-  padding: 20px;
+  padding: 0 10px;
   text-align: center;
-  background: var(--card-bg);
-  border-radius: 20px;
-  border: 4px solid var(--christmas-gold);
-  box-shadow: var(--card-shadow);
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--text);
-  backdrop-filter: blur(20px);
+}
+.client-info {
+  position: absolute;
+  top: 5px;
+  right: 15px;
+  font-size: 11px;
+  color: #aaa;
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 3px 6px;
+  border-radius: 3px;
+}
+body.dark-mode .client-info {
+  color: var(--primary);
+  border: 1px solid var(--primary);
 }
 
-.project-info-box strong {
-  color: var(--christmas-gold);
-  font-size: 15px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* ============================================
-   🎭 MODAL
-   ============================================ */
+/* [MỚI] MODAL STYLES */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.7);
   z-index: 20000;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.3s;
-  backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s;
 }
 
 .modal-box {
   background: var(--card-bg);
-  padding: 30px;
-  border-radius: 25px;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
-  border: 5px solid var(--christmas-gold);
-  min-width: 350px;
-  max-width: 90%;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--primary);
+  min-width: 300px;
   text-align: center;
-  animation: scaleIn 0.4s;
-  backdrop-filter: blur(20px);
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.modal-box h3 {
-  color: var(--christmas-gold);
-  font-size: 1.4em;
-  margin-bottom: 20px;
-  font-weight: 700;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  color: var(--text);
 }
 
 .modal-actions {
@@ -937,196 +515,4 @@ tbody tr:hover {
 
 .modal-actions button {
   min-width: 100px;
-}
-
-/* ============================================
-   🎨 SCROLLBAR
-   ============================================ */
-::-webkit-scrollbar {
-  width: 16px;
-  height: 16px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(13, 77, 61, 0.5);
-  border-radius: 10px;
-  box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
-}
-
-::-webkit-scrollbar-thumb {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--christmas-red),
-    var(--christmas-red) 10px,
-    #ffffff 10px,
-    #ffffff 20px
-  );
-  border-radius: 10px;
-  border: 2px solid var(--container-bg);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: repeating-linear-gradient(
-    45deg,
-    #ff6b85,
-    #ff6b85 10px,
-    #ffffff 10px,
-    #ffffff 20px
-  );
-  border: 1px solid #fff; 
-}
-
-/* ============================================
-   📱 RESPONSIVE DESIGN
-   ============================================ */
-@media (max-width: 768px) {
-  body {
-    padding: 15px;
-  }
-
-  .container {
-    border-width: 10px;
-  }
-
-  .container::before,
-  .container::after {
-    font-size: 35px;
-  }
-
-  header {
-    padding: 15px 20px;
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  header h1 {
-    font-size: 1.4em;
-  }
-
-  .tab-btn {
-    padding: 16px 20px;
-    font-size: 13px;
-  }
-
-  .tab-content {
-    padding: 20px;
-  }
-
-  .card {
-    padding: 20px;
-  }
-
-  .card h3 {
-    font-size: 1.3em;
-  }
-
-  .control-row {
-    flex-direction: column;
-  }
-
-  input[type="text"],
-  input[type="number"],
-  select.input-field {
-    width: 100%;
-  }
-
-  .action-log-container {
-    width: calc(100% - 30px);
-    left: 15px;
-    right: 15px;
-    bottom: 15px;
-  }
-
-  .modal-box {
-    min-width: 320px;
-    padding: 30px;
-  }
-
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 12px;
-  }
-
-  .big-btn {
-    padding: 18px 35px;
-    font-size: 1.1em;
-    min-width: 180px;
-  }
-}
-
-@media (max-width: 480px) {
-  header h1 {
-    font-size: 1.2em;
-  }
-
-  .tab-btn {
-    padding: 14px 16px;
-    font-size: 12px;
-  }
-
-  .card h3 {
-    font-size: 1.1em;
-  }
-
-  button {
-    padding: 12px 20px;
-    font-size: 13px;
-  }
-}
-
-/* ============================================
-   🎯 UTILITY CLASSES
-   ============================================ */
-.loading {
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-/* Canvas ẩn cho recorder */
-#camRecorderCanvas {
-  display: none;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
-}
-
-/* Christmas lights effect */
-@keyframes lights {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-/* Festive button glow */
-.btn-primary:hover {
-  box-shadow: 0 12px 30px rgba(255, 56, 92, 0.6),
-              0 0 30px rgba(255, 56, 92, 0.4);
-}
-
-.btn-refresh:hover {
-  box-shadow: 0 12px 30px rgba(0, 182, 122, 0.6),
-              0 0 30px rgba(0, 182, 122, 0.4);
-}
-
-.btn-warning:hover {
-  box-shadow: 0 12px 30px rgba(255, 193, 7, 0.6),
-              0 0 30px rgba(255, 193, 7, 0.4);
-}
-
-/* ============================================
-   🚫 ẨN THANH CUỘN NGANG (Horizontal Scrollbar)
-   ============================================ */
-::-webkit-scrollbar:horizontal {
-    height: 0px;
-    display: none;
-}
-
-/* Đảm bảo body không bị tràn ngang gây lag */
-body {
-    overflow-x: hidden;
 }
