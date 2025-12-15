@@ -166,13 +166,13 @@ export function toggleRemoteInput(type) {
       streamView.addEventListener('mouseup', handleMouseUp);
       streamView.addEventListener('contextmenu', (e) => e.preventDefault());
       streamView.style.cursor = 'crosshair';
-      logActionUI("✅ Đã BẬT điều khiển chuột", true);
+      logActionUI("Đã BẬT điều khiển chuột", true);
     } else {
       streamView.removeEventListener('mousemove', handleMouseMove);
       streamView.removeEventListener('mousedown', handleMouseDown);
       streamView.removeEventListener('mouseup', handleMouseUp);
       streamView.style.cursor = 'default';
-      logActionUI("❌ Đã TẮT điều khiển chuột", false);
+      logActionUI("Đã TẮT điều khiển chuột", true);
     }
   }
   else if (type === 'keyboard') {
@@ -182,11 +182,11 @@ export function toggleRemoteInput(type) {
       streamContainer.focus();
       streamContainer.addEventListener('keydown', handleKeyDown);
       streamContainer.addEventListener('keyup', handleKeyUp);
-      logActionUI("✅ Đã BẬT điều khiển bàn phím", true);
+      logActionUI("Đã BẬT điều khiển bàn phím", true);
     } else {
       streamContainer.removeEventListener('keydown', handleKeyDown);
       streamContainer.removeEventListener('keyup', handleKeyUp);
-      logActionUI("❌ Đã TẮT điều khiển bàn phím", false);
+      logActionUI("Đã TẮT điều khiển bàn phím", true);
     }
   }
 }

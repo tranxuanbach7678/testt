@@ -53,7 +53,7 @@ body.dark-mode {
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: var(--bg);
-  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('./image/background.jpg');
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('./image/background_after_fix.png');
   
   background-size: cover;
   background-position: center;
@@ -1087,6 +1087,11 @@ tbody tr:hover {
 .btn-refresh:hover {
   box-shadow: 0 12px 30px rgba(0, 182, 122, 0.6),
               0 0 30px rgba(0, 182, 122, 0.4);
+}
+
+.btn-danger:hover {
+  box-shadow: 0 12px 30px rgba(170, 70, 87, 0.6),
+              0 0 30px rgba(171, 137, 137, 0.4);
 }
 
 .btn-warning:hover {

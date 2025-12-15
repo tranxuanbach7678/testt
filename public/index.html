@@ -10,13 +10,13 @@
     <div class="container">
       <header style="justify-content: space-between;">
         
-        <div id="client-info" class="client-info" style="position: static">
+        <div id="client-info" class="client-info" style="position: absolute; left: 5%; top: 10px; transform: translateX(-10%);">
           Đang kết nối...
         </div>
 
-        <h1 style="display: inline-block">Điều khiển máy tính từ xa</h1>
-
-        <div style="display: flex; align-items: center; gap: 8px">
+        <h1 style="display: inline-block; position: absolute; left: 50%; top: -2px; transform: translateX(-50%);">Điều khiển máy tính từ xa</h1>
+        /*chinh sua vi tri cho nay*/
+        <div style="display: flex; align-items: center; gap: 2px">
           <button
             id="btnSnow"
             class="theme-toggle-btn"
@@ -24,7 +24,8 @@
             title="Bật/Tắt hiệu ứng tuyết"
             style="padding: 4px 8px; font-size: 11px;" 
           >
-            ❄️ Snow
+            <!-- ❄️ Snow -->
+            ❄️
           </button>
 
           <button
@@ -33,7 +34,8 @@
             title="Chuyển chế độ Sáng/Tối"
             style="padding: 4px 8px; font-size: 11px;"
           >
-            🌗 Mode
+            <!-- 🌗 Mode -->
+             🌗
           </button>
         </div>
         
