@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Remote Control Launcher</title>
+    <title>Remote Control Launcher v2</title>
     <style>
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -20,7 +20,7 @@
         padding: 30px;
         border-radius: 10px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-        width: 350px;
+        width: 380px;
         text-align: center;
       }
       h2 {
@@ -35,17 +35,25 @@
         border: 1px solid #444;
         font-size: 0.9em;
       }
+      .input-group {
+        position: relative;
+        margin-bottom: 15px;
+      }
       input {
         width: 100%;
         padding: 12px;
-        margin-bottom: 15px;
         border-radius: 5px;
         border: 1px solid #444;
         background: #1e1e1e;
         color: #fff;
         box-sizing: border-box;
+        outline: none;
       }
-      button {
+      input:focus {
+        border-color: #007acc;
+      }
+
+      button#btnConnect {
         width: 100%;
         padding: 12px;
         background: #007acc;
@@ -57,8 +65,20 @@
         font-size: 16px;
         transition: 0.3s;
       }
-      button:hover {
+      button#btnConnect:hover {
         background: #005f9e;
+      }
+      button:disabled {
+        background: #555;
+        cursor: not-allowed;
+      }
+
+      .error-msg {
+        color: #ff6b6b;
+        font-size: 0.85em;
+        margin-top: 5px;
+        min-height: 20px;
+        display: none;
       }
 
       .history-area {
@@ -69,6 +89,8 @@
         font-size: 0.85em;
         color: #aaa;
         margin-bottom: 5px;
+        display: flex;
+        justify-content: space-between;
       }
       .history-list {
         max-height: 150px;
@@ -77,19 +99,43 @@
         border-radius: 5px;
         border: 1px solid #333;
       }
+      /* Scrollbar đẹp hơn */
+      .history-list::-webkit-scrollbar {
+        width: 6px;
+      }
+      .history-list::-webkit-scrollbar-thumb {
+        background: #444;
+        border-radius: 3px;
+      }
+
       .history-item {
         padding: 8px 12px;
         border-bottom: 1px solid #333;
-        cursor: pointer;
         font-size: 0.9em;
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        transition: background 0.2s;
       }
       .history-item:hover {
         background: #333;
       }
-      .history-item:last-child {
-        border-bottom: none;
+      .history-item span {
+        cursor: pointer;
+        flex-grow: 1;
+      }
+
+      /* Nút xóa nhỏ */
+      .btn-delete {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0 5px;
+      }
+      .btn-delete:hover {
+        color: #ff6b6b;
       }
     </style>
   </head>
@@ -101,15 +147,28 @@
         Client ID: <strong id="clientIdDisplay">...</strong>
       </div>
 
-      <input
-        type="text"
-        id="ipInput"
-        placeholder="Nhập IP Server (VD: 192.168.1.10)"
-      />
-      <button onclick="connectToServer()">KẾT NỐI</button>
+      <div class="input-group">
+        <input
+          type="text"
+          id="ipInput"
+          placeholder="Nhập IP Server (VD: 192.168.1.10)"
+        />
+        <div id="errorMsg" class="error-msg">
+          ⚠️ Không tìm thấy Server tại IP này!
+        </div>
+      </div>
+
+      <button id="btnConnect" onclick="checkAndConnect()">KẾT NỐI</button>
 
       <div class="history-area">
-        <div class="history-label">Lịch sử kết nối:</div>
+        <div class="history-label">
+          Lịch sử kết nối:
+          <small
+            style="cursor: pointer; color: #007acc"
+            onclick="clearAllHistory()"
+            >(Xóa hết)</small
+          >
+        </div>
         <div class="history-list" id="historyList"></div>
       </div>
     </div>
@@ -118,57 +177,159 @@
       // 1. Quản lý ID Client
       let clientId = localStorage.getItem("launcher_client_id");
       if (!clientId) {
-        // Tạo ID ngẫu nhiên nếu chưa có
         clientId =
           "CL_" + Math.random().toString(36).substr(2, 6).toUpperCase();
         localStorage.setItem("launcher_client_id", clientId);
       }
       document.getElementById("clientIdDisplay").textContent = clientId;
 
-      // 2. Quản lý Lịch sử IP
       const historyListEl = document.getElementById("historyList");
       const ipInputEl = document.getElementById("ipInput");
+      const btnConnect = document.getElementById("btnConnect");
+      const errorMsg = document.getElementById("errorMsg");
 
+      // 2. Hiển thị Lịch sử (kèm nút xóa)
       function loadHistory() {
         const history = JSON.parse(localStorage.getItem("ip_history") || "[]");
         historyListEl.innerHTML = "";
+
         if (history.length === 0) {
           historyListEl.innerHTML =
-            '<div style="padding:10px;color:#666;text-align:center">Chưa có lịch sử</div>';
+            '<div style="padding:10px;color:#666;text-align:center;font-size:0.85em">Trống</div>';
           return;
         }
-        history.forEach((ip) => {
+
+        history.forEach((ip, index) => {
           const div = document.createElement("div");
           div.className = "history-item";
-          div.innerHTML = `<span>${ip}</span> <span style="color:#666">↺</span>`;
-          div.onclick = () => {
+
+          // Phần text IP (Click vào thì điền lên ô input)
+          const span = document.createElement("span");
+          span.textContent = ip;
+          span.onclick = () => {
             ipInputEl.value = ip;
+            errorMsg.style.display = "none";
           };
+
+          // Nút xóa (Click vào thì xóa IP đó)
+          const btnDel = document.createElement("button");
+          btnDel.className = "btn-delete";
+          btnDel.innerHTML = "&#10005;"; // Dấu X
+          btnDel.onclick = (e) => {
+            e.stopPropagation(); // Chặn sự kiện click lan ra ngoài
+            deleteHistoryItem(index);
+          };
+
+          div.appendChild(span);
+          div.appendChild(btnDel);
           historyListEl.appendChild(div);
         });
       }
 
-      // 3. Hàm Kết Nối
-      function connectToServer() {
-        let ip = ipInputEl.value.trim();
+      // Xóa 1 IP cụ thể
+      function deleteHistoryItem(index) {
+        let history = JSON.parse(localStorage.getItem("ip_history") || "[]");
+        history.splice(index, 1);
+        localStorage.setItem("ip_history", JSON.stringify(history));
+        loadHistory();
+      }
+
+      // Xóa hết
+      function clearAllHistory() {
+        if (confirm("Bạn muốn xóa toàn bộ lịch sử?")) {
+          localStorage.removeItem("ip_history");
+          loadHistory();
+        }
+      }
+
+      // 3. Hàm Kiểm tra và Kết Nối
+      async function checkAndConnect() {
+        const ip = ipInputEl.value.trim();
+        errorMsg.style.display = "none";
+
+        // Regex cơ bản kiểm tra định dạng IP hoặc Domain
+        // Chấp nhận: 192.168.1.1, localhost, my-server.com
+        const ipRegex = /^[\w.-]+$/;
+
         if (!ip) {
-          alert("Vui lòng nhập IP Server!");
+          showError("Vui lòng nhập IP!");
+          return;
+        }
+        if (!ipRegex.test(ip)) {
+          showError("Định dạng IP/Domain không hợp lệ!");
           return;
         }
 
-        // Lưu vào lịch sử (Không lưu trùng)
+        // Bắt đầu kiểm tra kết nối
+        btnConnect.disabled = true;
+        btnConnect.innerHTML = "⏳ Đang kiểm tra Server...";
+
+        try {
+          // Ping tới API /ping mà ta vừa thêm ở Server
+          // Set timeout 2 giây, nếu lâu hơn coi như server chết
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+          const response = await fetch(`http://${ip}:8080/ping`, {
+            method: "GET",
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const text = await response.text();
+            if (text === "pong") {
+              // ==> KẾT NỐI THÀNH CÔNG
+              saveHistory(ip);
+              btnConnect.innerHTML = "🚀 Đang vào...";
+              btnConnect.style.background = "#28a745"; // Màu xanh lá
+
+              setTimeout(() => {
+                window.location.href = `http://${ip}:8080?importedId=${clientId}`;
+              }, 500);
+              return;
+            }
+          }
+          throw new Error("Không phải Server Remote Control");
+        } catch (err) {
+          console.error(err);
+          btnConnect.disabled = false;
+          btnConnect.innerHTML = "KẾT NỐI";
+          showError(`Không tìm thấy Server tại ${ip}:8080`);
+        }
+      }
+
+      function saveHistory(ip) {
         let history = JSON.parse(localStorage.getItem("ip_history") || "[]");
         history = history.filter((item) => item !== ip); // Xóa cũ nếu trùng
         history.unshift(ip); // Thêm vào đầu
-        if (history.length > 10) history.pop(); // Giới hạn 10 IP
+        if (history.length > 10) history.pop();
         localStorage.setItem("ip_history", JSON.stringify(history));
-
-        // Chuyển hướng sang Web Server thật
-        // Truyền kèm ClientID qua URL để Server nhận diện đúng ID này
-        window.location.href = `http://${ip}:8080?importedId=${clientId}`;
+        loadHistory();
       }
 
-      // Khởi chạy
+      function showError(msg) {
+        errorMsg.textContent = "⚠️ " + msg;
+        errorMsg.style.display = "block";
+        // Hiệu ứng rung nhẹ ô input
+        ipInputEl.style.animation = "shake 0.3s";
+        setTimeout(() => (ipInputEl.style.animation = ""), 300);
+      }
+
+      // CSS animation cho hiệu ứng rung
+      const styleSheet = document.createElement("style");
+      styleSheet.innerText = `
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+    `;
+      document.head.appendChild(styleSheet);
+
       loadHistory();
     </script>
   </body>
