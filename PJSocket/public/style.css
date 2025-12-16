@@ -1,0 +1,1321 @@
+:root {
+  --christmas-red: #ff385c;
+  --christmas-white: #ffffff;
+  --christmas-green: #00b67a;
+  --christmas-dark-green: #0d4d3d;
+  --christmas-gold: #ffc107;
+  --christmas-orange: #ff9800;
+  --primary: #ff385c;
+  --bg: #ff385c;
+  --container-bg: #0d4d3d;
+  --text: #ffffff;
+  --text-muted: #b8d4ce;
+  --danger: #ff6b6b;
+  --success: #51cf66;
+  --header-bg: #00b67a;
+  --header-text: #fff;
+  --border: #1a6b54;
+  --card-bg: rgba(13, 77, 61, 0.8);
+  --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  --tab-bg: rgba(0, 182, 122, 0.3);
+  --tab-hover: rgba(255, 56, 92, 0.2);
+  --tab-active-bg: #ff385c;
+  --input-bg: rgba(255, 255, 255, 0.1);
+  --input-border: rgba(255, 255, 255, 0.3);
+  --table-head-bg: rgba(0, 0, 0, 0.2);
+  --table-hover: rgba(255, 255, 255, 0.05);
+  --recent-bg: rgba(0, 0, 0, 0.2);
+  --tag-bg: #ffc107;
+  --log-bg: rgba(0, 0, 0, 0.3);
+  --log-border: rgba(255, 255, 255, 0.2);
+}
+
+/* body.dark-mode {
+  --bg: #2d0a1f;
+  --container-bg: #1a0d15;
+  --card-bg: rgba(26, 13, 21, 0.9);
+  --header-bg: #00b67a;
+  --tab-bg: rgba(0, 182, 122, 0.2);
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --table-head-bg: rgba(0, 0, 0, 0.4);
+  --recent-bg: rgba(0, 0, 0, 0.3);
+} */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================
+   🎨 BODY & BACKGROUND
+   ============================================ */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg);
+  /* background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('./image/background_sang.png'); */
+  
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  color: var(--text);
+  min-height: 100vh;
+  padding: 10px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* --- HIỆU ỨNG TUYẾT RƠI (JS) --- */
+.snowflake {
+  position: fixed;
+  top: -50px;
+  color: #fff;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.8;
+  animation-name: snowfall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes snowfall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0.2;
+  }
+}
+
+@keyframes snowfall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   CONTAINER - Green Frame Style
+   ============================================ */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--container-bg);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  border: 15px solid var(--header-bg);
+  position: relative;
+}
+
+/* ============================================
+   HEADER - Green Nav Bar
+   ============================================ */
+header {
+  background: var(--header-bg);
+  color: var(--header-text);
+  padding: 25px 20px;
+  display: flex;
+  justify-content: flex-end; 
+  
+  align-items: center;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+header h1 {
+  font-size: 2.2em; 
+  
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+  margin: 0;
+  
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: rgb(109, 110, 109, 0.3); 
+}
+
+.client-info {
+  background: rgba(255, 56, 92, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
+  font-family: monospace;
+  box-shadow: 0 4px 15px rgba(255, 56, 92, 0.4);
+}
+
+/* ============================================
+   TABS - Christmas Style
+   ============================================ */
+.tabs-scroll {
+  background: var(--tab-bg);
+  border-bottom: 3px solid var(--christmas-gold);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 4px;
+  margin-bottom: 15px;
+
+  position: relative;
+  overflow: visible;
+}
+
+.tabs-scroll::after {
+  content: "";
+  position: absolute;
+  
+  top: -25px;
+  left: -15px;
+  right: -5px;
+  height: 55px;
+  width: calc(100% + 30px);
+  
+  background-image: url('image/snow_cap1.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+
+  pointer-events: none; 
+  z-index: 100;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+}
+
+.tabs {
+  display: flex;
+  position: relative;
+  min-width: max-content;
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  
+  padding: 17px 5px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  position: relative;
+  border-radius: 20px;
+}
+
+
+.tab-btn:not(.active):hover {
+  background: var(--tab-hover);
+  color: #fff;
+}
+
+.tab-btn.active {
+  color: #fff;
+  background: var(--tab-active-bg);
+}
+
+#tab-slider {
+  position: absolute;
+  bottom: 0;
+  height: 3px;
+  background: var(--christmas-gold);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   DECORATIVE PATTERN BACKGROUND
+   ============================================ */
+.tab-content {
+  display: none;
+  padding: 20px;
+  animation: fadeIn 0.5s ease;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+  background-size: 400px 400px;
+  position: relative;
+}
+
+@keyframes swing {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.card {
+  background: var(--card-bg);
+  border: 3px solid var(--border);
+  border-radius: 20px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px; 
+  background: repeating-linear-gradient(
+    45deg,
+    var(--christmas-red),
+    var(--christmas-red) 15px,
+    var(--christmas-white) 15px,
+    var(--christmas-white) 30px
+  );
+  border-radius: 17px 17px 0 0;
+  z-index: 1;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border-color: var(--christmas-gold);
+}
+
+.card h3 {
+  color: var(--christmas-gold);
+  font-size: 1.3em;
+  margin-bottom: 15px;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.card.full-height {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.card-head h3 {
+  margin-bottom: 0;
+}
+
+/* ============================================
+   CONTROLS & INPUTS
+   ============================================ */
+.control-row {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+input[type="text"],
+input[type="number"],
+.search-box,
+select.input-field {
+  flex: 1;
+  padding: 10px 15px;
+  border: 2px solid var(--input-border);
+  border-radius: 15px;
+  font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text);
+  transition: all 0.3s ease;
+  min-width: 200px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+}
+
+.search-box {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+input:focus,
+select:focus,
+.search-box:focus {
+  outline: none;
+  border-color: var(--christmas-gold);
+  box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+input::placeholder,
+select::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================
+   BUTTONS - Christmas Colors
+   ============================================ */
+button {
+  cursor: pointer;
+  padding: 10px 20px;
+  border-radius: 15px;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+button::before {
+  display: none;
+}
+
+button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+button:active {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(60%);
+}
+
+button:disabled:hover {
+  transform: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #ff385c, #ff6b9d);
+  color: #fff;
+}
+
+.btn-refresh {
+  background: linear-gradient(135deg, #00b67a, #00e697);
+  color: #fff;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+  color: #fff;
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #ffc107, #ffda44);
+  color: #000;
+}
+
+button.muted {
+  background: linear-gradient(135deg, #6c757d, #5a6268);
+  color: #fff;
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.big-btn {
+  padding: 25px 50px;
+  font-size: 1.4em;
+  min-width: 250px;
+}
+
+/* ============================================
+   STATUS MESSAGES
+   ============================================ */
+.status {
+  min-height: 28px;
+  font-size: 1em;
+  color: var(--christmas-gold);
+  margin-top: 15px;
+  font-weight: 700;
+  padding: 12px 18px;
+  background: rgba(255, 193, 7, 0.15);
+  border-radius: 12px;
+  border-left: 5px solid var(--christmas-gold);
+  backdrop-filter: blur(10px);
+}
+
+/* ============================================
+   TABLES
+   ============================================ */
+.table-wrapper {
+  max-height: 450px;
+  overflow-y: auto;
+  border: 3px solid var(--border);
+  border-radius: 15px;
+  background: var(--card-bg);
+  flex: 1;
+  backdrop-filter: blur(10px);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: var(--table-head-bg);
+  color: var(--christmas-gold);
+  z-index: 10;
+  text-align: left;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.9em;
+  letter-spacing: 1px;
+  backdrop-filter: blur(10px);
+}
+
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr {
+  transition: all 0.3s ease;
+}
+
+tbody tr:hover {
+  background: var(--table-hover);
+  transform: scale(1.01);
+}
+
+.app-title {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* ============================================
+   TAGS & RECENT LIST
+   ============================================ */
+.recent-list {
+  margin-top: 10px;
+  padding: 15px;
+  background: var(--recent-bg);
+  border-radius: 15px;
+  border: 2px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+
+.recent-list small {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 700;
+  color: var(--christmas-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#recentListTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag {
+  display: inline-block;
+  background: var(--tag-bg);
+  color: #000;
+  padding: 6px 15px;
+  border-radius: 25px;
+  font-size: 0.9em;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.tag:hover {
+  border-color: var(--christmas-red);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(255, 56, 92, 0.4);
+}
+
+/* ============================================
+   SCREEN BOX
+   ============================================ */
+.vid-duration-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vid-duration-wrapper label {
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.screen-box {
+  background: #000;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  overflow: hidden;
+  margin-top: 15px;
+  border: 5px solid var(--christmas-gold);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+#screenImg,
+#screenStreamView,
+#camStreamView {
+  max-width: 100%;
+  max-height: 500px;
+  display: block;
+}
+
+/* ============================================
+   GALLERY
+   ============================================ */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.gallery-item {
+  position: relative;
+  cursor: pointer;
+  border: 4px solid transparent;
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  background: #000;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.gallery-item:hover {
+  border-color: var(--christmas-gold);
+  transform: scale(1.1) rotate(3deg);
+  box-shadow: 0 15px 35px rgba(255, 193, 7, 0.6);
+  z-index: 10;
+}
+
+.gallery-item img,
+.gallery-item video {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  display: block;
+}
+
+/* ============================================
+   KEYLOG
+   ============================================ */
+#logArea {
+  width: 100%;
+  height: 300px;
+  padding: 15px;
+  border: 3px solid var(--log-border);
+  border-radius: 15px;
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  background: var(--log-bg);
+  color: var(--christmas-gold);
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.6;
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.keylog-toggle-label {
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.keylog-toggle-cb {
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+/* ============================================
+   WARNING ZONE
+   ============================================ */
+.warning-zone {
+  border-left: 8px solid var(--danger);
+  background: rgba(255, 107, 107, 0.15);
+  animation: pulseGlow 2s ease-in-out infinite;
+  border-radius: 20px;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgba(255, 107, 107, 0.3);
+  }
+}
+
+.warning-zone h3 {
+  color: var(--danger);
+}
+
+/* ============================================
+   ACTION LOG - Floating Panel
+   ============================================ */
+.action-log-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  background: var(--card-bg);
+  border-radius: 20px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  overflow: hidden;
+  border: 4px solid var(--christmas-gold);
+  animation: slideInRight 0.6s ease;
+  backdrop-filter: blur(20px);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(450px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.action-log-header {
+  background: linear-gradient(135deg, var(--christmas-red), var(--christmas-orange));
+  color: #fff;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 14px;
+}
+
+.action-log-header button {
+  padding: 4px 12px;
+  font-size: 18px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+}
+
+.action-log-list {
+  transition: all 0.5s ease;
+  overflow: hidden;
+  max-height: 200px;
+  padding: 8px 0;
+  overflow-y: auto;
+}
+
+.action-log-list.minimized {
+  max-height: 0;
+  padding: 0;
+}
+
+.log-item {
+  padding: 8px 15px;
+  border-bottom: 1px solid var(--border);
+  word-break: break-word;
+  transition: all 0.3s ease;
+  font-size: 13px;
+}
+
+.log-item:hover {
+  background: var(--table-hover);
+  padding-left: 20px;
+}
+
+.log-item.success {
+  border-left: 5px solid var(--success);
+  background: rgba(81, 207, 102, 0.15);
+}
+
+.log-item.error {
+  border-left: 5px solid var(--danger);
+  background: rgba(255, 107, 107, 0.15);
+}
+
+.log-time {
+  font-size: 0.85em;
+  color: var(--christmas-gold);
+  margin-right: 8px;
+  font-weight: 700;
+}
+
+/* ============================================
+   PROJECT INFO
+   ============================================ */
+.project-info-box {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  text-align: center;
+  background: var(--card-bg);
+  border-radius: 20px;
+  border: 4px solid var(--christmas-gold);
+  box-shadow: var(--card-shadow);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  backdrop-filter: blur(20px);
+}
+
+.project-info-box strong {
+  color: var(--christmas-gold);
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================
+   MODAL
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s;
+  backdrop-filter: blur(8px);
+}
+
+.modal-box {
+  background: var(--card-bg);
+  padding: 30px;
+  border-radius: 25px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+  border: 5px solid var(--christmas-gold);
+  min-width: 350px;
+  max-width: 90%;
+  text-align: center;
+  animation: scaleIn 0.4s;
+  backdrop-filter: blur(20px);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-box h3 {
+  color: var(--christmas-gold);
+  font-size: 1.4em;
+  margin-bottom: 20px;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  min-width: 100px;
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(13, 77, 61, 0.5);
+  border-radius: 10px;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--christmas-red),
+    var(--christmas-red) 10px,
+    #ffffff 10px,
+    #ffffff 20px
+  );
+  border-radius: 10px;
+  border: 2px solid var(--container-bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: repeating-linear-gradient(
+    45deg,
+    #ff6b85,
+    #ff6b85 10px,
+    #ffffff 10px,
+    #ffffff 20px
+  );
+  border: 1px solid #fff; 
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 768px) {
+  body {
+    padding: 15px;
+  }
+
+  .container {
+    border-width: 10px;
+  }
+
+  .container::before,
+  .container::after {
+    font-size: 35px;
+  }
+
+  header {
+    padding: 15px 20px;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  header h1 {
+    font-size: 1.4em;
+  }
+
+  .tab-btn {
+    padding: 16px 20px;
+    font-size: 13px;
+  }
+
+  .tab-content {
+    padding: 20px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .card h3 {
+    font-size: 1.3em;
+  }
+
+  .control-row {
+    flex-direction: column;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select.input-field {
+    width: 100%;
+  }
+
+  .action-log-container {
+    width: calc(100% - 30px);
+    left: 15px;
+    right: 15px;
+    bottom: 15px;
+  }
+
+  .modal-box {
+    min-width: 320px;
+    padding: 30px;
+  }
+
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+  }
+
+  .big-btn {
+    padding: 18px 35px;
+    font-size: 1.1em;
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  header h1 {
+    font-size: 1.2em;
+  }
+
+  .tab-btn {
+    padding: 14px 16px;
+    font-size: 12px;
+  }
+
+  .card h3 {
+    font-size: 1.1em;
+  }
+
+  button {
+    padding: 12px 20px;
+    font-size: 13px;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+#camRecorderCanvas {
+  display: none;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes lights {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.btn-primary:hover {
+  box-shadow: 0 12px 30px rgba(255, 56, 92, 0.6),
+              0 0 30px rgba(255, 56, 92, 0.4);
+}
+
+.btn-refresh:hover {
+  box-shadow: 0 12px 30px rgba(0, 182, 122, 0.6),
+              0 0 30px rgba(0, 182, 122, 0.4);
+}
+
+.btn-danger:hover {
+  box-shadow: 0 12px 30px rgba(170, 70, 87, 0.6),
+              0 0 30px rgba(171, 137, 137, 0.4);
+}
+
+.btn-warning:hover {
+  box-shadow: 0 12px 30px rgba(255, 193, 7, 0.6),
+              0 0 30px rgba(255, 193, 7, 0.4);
+}
+
+/* ============================================
+   ẨN THANH CUỘN NGANG (Horizontal Scrollbar)
+   ============================================ */
+::-webkit-scrollbar:horizontal {
+    height: 0px;
+    display: none;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+select.input-field option {
+    background-color: #333 !important;
+    color: #fff !important;
+    padding: 10px;
+}
+
+/* --- 1. CẤU HÌNH NÚT (Code của bạn) --- */
+.icon-btn {
+  padding: 6px;
+  width: 43px;  /* Nút to 43px */
+  height: 43px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Căn icon vào chính giữa */
+  overflow: hidden; 
+  transition: background 0.3s;
+}
+
+/* --- 2. CẤU HÌNH ICON SUN/MOON --- */
+.sun-moon {
+  /* 🔥 QUAN TRỌNG: Chỉnh số này để icon to/nhỏ trong nút */
+  /* Với nút 43px, mình đặt icon 20px là vừa đẹp (tính cả tia nắng là ~34px) */
+  font-size: 20px; 
+  width: 1em; 
+  height: 1em;
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.5s ease;
+  
+  /* Màu mặc định (Mặt trời) */
+  background-color: #f39c12;
+  box-shadow: 0 0 0.35em #f1c40f; 
+}
+
+/* Tia nắng (Dựa theo font-size ở trên) */
+.sun-moon::before {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 1.7em; height: 1.7em; /* Tổng độ rộng tia nắng = 1.7 * 20px = 34px */
+  border: 0.15em dashed #f39c12; 
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  transition: all 0.5s ease;
+}
+
+/* --- 3. TRẠNG THÁI DARK MODE (Mặt trăng) --- */
+body.dark-mode .sun-moon {
+  background-color: transparent;
+  
+  /* Tạo hình lưỡi liềm */
+  box-shadow: -0.29em 0.165em 0 0 #f1c40f; 
+  
+  /* Căn chỉnh lại vào giữa nút */
+  transform: rotate(-30deg) scale(0.9) translate(0.3em, -0.15em);
+}
+
+/* Ẩn tia nắng khi thành mặt trăng */
+body.dark-mode .sun-moon::before {
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+}
+
+/* Đổi màu nền nút khi tối */
+body.dark-mode .icon-btn {
+  background: #333;
+  border-color: #555;
+}
+
+/* --- 1. KHUNG CHỨA ICON --- */
+.cloud-snow {
+  font-size: 20px; /* Điều chỉnh kích thước icon tại đây */
+  position: relative;
+  width: 2.2em;
+  height: 2em; /* Tăng chiều cao chút để chứa tuyết rơi */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- 2. VẼ ĐÁM MÂY (Mặc định là màu Xám - Tắt) --- */
+.cloud-body {
+  position: absolute;
+  top: 40%; /* Vị trí mây */
+  width: 1.8em;
+  height: 0.6em;
+  background: #b0c4de; /* Màu xám xanh nhạt (Mây thường) */
+  border-radius: 1em;
+  transition: all 0.4s ease; /* Hiệu ứng chuyển màu mượt */
+  z-index: 2;
+}
+
+/* Tạo hình phồng cho mây */
+.cloud-body::before,
+.cloud-body::after {
+  content: "";
+  position: absolute;
+  background: inherit; /* Ăn theo màu của cloud-body */
+  border-radius: 50%;
+}
+
+.cloud-body::before {
+  width: 0.8em; height: 0.8em;
+  top: -0.4em; left: 0.25em;
+}
+
+.cloud-body::after {
+  width: 0.5em; height: 0.5em;
+  top: -0.2em; right: 0.3em;
+}
+
+/* --- 3. HẠT TUYẾT (Mặc định ẩn đi) --- */
+.snow-drops {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 4px; height: 4px;
+  background: transparent;
+  border-radius: 50%;
+  z-index: 1;
+  opacity: 0; /* Ẩn khi chưa bật */
+  transition: opacity 0.3s;
+}
+
+/* --- 4. TRẠNG THÁI ACTIVE (Khi có class .snow-active) --- */
+
+/* Đám mây chuyển màu Xanh */
+.snow-active .cloud-body {
+  background: #3498db; /* Màu xanh da trời */
+  transform: translateY(-2px); /* Nhích lên 1 chút */
+  box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3); /* Đổ bóng nhẹ cho đẹp */
+}
+
+/* Hiện hạt tuyết và bắt đầu rơi */
+.snow-active .snow-drops {
+  opacity: 1;
+  /* Tạo 3 hạt tuyết bằng box-shadow */
+  /* Cú pháp: x y blur spread color */
+  box-shadow: 
+    -0.5em 0 0 -1px #3498db, 
+     0     0 0 -1px #3498db, 
+     0.5em 0 0 -1px #3498db;
+  
+  /* Chạy animation rơi */
+  animation: snow-fall 0.8s linear infinite;
+}
+
+/* Animation tuyết rơi */
+@keyframes snow-fall {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(12px); /* Rơi xuống 12px */
+    opacity: 0; /* Mờ dần */
+  }
+}
+
+/* Đổi màu chủ đề*/
+body.dark-mode {
+  --bg: #2d0a1f;
+  --container-bg: #1a0d15;
+  --card-bg: rgba(26, 13, 21, 0.9);
+  --header-bg: #00b67a;
+  --tab-bg: rgba(0, 182, 122, 0.2);
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --table-head-bg: rgba(0, 0, 0, 0.4);
+  --recent-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Container chính để giữ vị trí */
+.background-container {
+    position: fixed; /* Cố định toàn màn hình */
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1; /* Nằm dưới cùng nội dung */
+}
+
+/* Style chung cho các lớp nền */
+.bg-layer {
+    position: absolute; /* Chồng lên nhau */
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+    /* DÒNG QUAN TRỌNG: Transition cho độ mờ */
+    transition: opacity 0.8s ease-in-out;
+}
+
+/* Thiết lập ảnh */
+.bg-day {
+    background-image: url('./image/background_sang.png');
+    z-index: 1; /* Nằm dưới */
+}
+.bg-night {
+    background-image: url('./image/background_toi.png');
+    z-index: 2; /* Nằm trên */
+    opacity: 0; /* Mặc định ẩn đi (trong suốt) */
+}
+
+/* KHI KÍCH HOẠT CHẾ ĐỘ TỐI */
+/* Khi container cha có class .show-night, thì lớp .bg-night hiện lên */
+.background-container.show-night .bg-night {
+    opacity: 1; /* Hiện rõ dần lên */
+}
