@@ -3,145 +3,179 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Remote Control Launcher v2</title>
+    <title>Remote Control Launcher</title>
     <style>
+      :root {
+        --christmas-red: #ff385c;
+        --christmas-green: #00b67a;
+        --christmas-dark-green: #0d4d3d;
+        --christmas-gold: #ffc107;
+        --text-white: #ffffff;
+        --input-bg: rgba(255, 255, 255, 0.1);
+      }
+
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #1e1e1e;
-        color: #fff;
+        background: url('./image/background_snow.png') no-repeat center center fixed;
+        background-size: cover;
+        color: var(--text-white);
         display: flex;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
         height: 100vh;
         margin: 0;
+        padding-left: 175px;
+        overflow: hidden;
       }
       .container {
-        background: #2d2d2d;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-        width: 380px;
+        position: relative;
+        width: 450px;
+        background-color: var(--christmas-dark-green);
+        border: 10px solid var(--christmas-green);
+        border-radius: 25px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        padding: 40px 30px 30px 30px;
         text-align: center;
+        z-index: 10;
       }
+
       h2 {
-        margin-bottom: 20px;
-        color: #61dafb;
+        margin-top: 0;
+        margin-bottom: 25px;
+        color: var(--text-white);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
       }
+
       .info-box {
-        background: #333;
-        padding: 10px;
-        border-radius: 5px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 12px;
+        border-radius: 12px;
         margin-bottom: 20px;
-        border: 1px solid #444;
-        font-size: 0.9em;
+        border: 2px dashed var(--christmas-green);
+        color: var(--christmas-gold);
+        font-weight: bold;
+        font-size: 0.95em;
       }
+
       .input-group {
         position: relative;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
       }
       input {
         width: 100%;
-        padding: 12px;
-        border-radius: 5px;
-        border: 1px solid #444;
-        background: #1e1e1e;
+        padding: 14px;
+        border-radius: 12px;
+        background: var(--input-bg);
+        border: 2px solid rgba(255, 255, 255, 0.3);
         color: #fff;
+        font-size: 15px;
         box-sizing: border-box;
         outline: none;
+        transition: all 0.3s ease;
+        font-family: inherit;
+      }
+      input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+        font-style: italic;
       }
       input:focus {
-        border-color: #007acc;
+        border-color: var(--christmas-gold);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
       }
 
       button#btnConnect {
         width: 100%;
-        padding: 12px;
-        background: #007acc;
+        padding: 14px;
+        
+        background: linear-gradient(135deg, #ff385c, #ff6b9d);
         color: white;
         border: none;
-        border-radius: 5px;
+        border-radius: 12px;
         cursor: pointer;
+        
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         font-weight: bold;
         font-size: 16px;
-        transition: 0.3s;
+        
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 5px 15px rgba(255, 56, 92, 0.4);
+        transition: all 0.2s;
       }
       button#btnConnect:hover {
-        background: #005f9e;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 56, 92, 0.6);
+      }
+      button#btnConnect:active {
+        transform: translateY(1px);
       }
       button:disabled {
         background: #555;
         cursor: not-allowed;
-      }
-
-      .error-msg {
-        color: #ff6b6b;
-        font-size: 0.85em;
-        margin-top: 5px;
-        min-height: 20px;
-        display: none;
+        box-shadow: none;
       }
 
       .history-area {
         margin-top: 25px;
         text-align: left;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        padding: 5px;
       }
       .history-label {
         font-size: 0.85em;
-        color: #aaa;
-        margin-bottom: 5px;
+        color: var(--christmas-gold);
+        margin: 8px 10px;
         display: flex;
         justify-content: space-between;
+        font-weight: bold;
       }
       .history-list {
-        max-height: 150px;
+        max-height: 120px;
         overflow-y: auto;
-        background: #1e1e1e;
-        border-radius: 5px;
-        border: 1px solid #333;
       }
-      /* Scrollbar đẹp hơn */
-      .history-list::-webkit-scrollbar {
-        width: 6px;
-      }
-      .history-list::-webkit-scrollbar-thumb {
-        background: #444;
-        border-radius: 3px;
-      }
-
       .history-item {
         padding: 8px 12px;
-        border-bottom: 1px solid #333;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         font-size: 0.9em;
         display: flex;
         justify-content: space-between;
         align-items: center;
         transition: background 0.2s;
+        border-radius: 8px;
+        cursor: pointer;
       }
       .history-item:hover {
-        background: #333;
+        background: rgba(255, 255, 255, 0.1);
       }
-      .history-item span {
-        cursor: pointer;
-        flex-grow: 1;
+      .btn-delete {
+        background: none; border: none; color: #aaa; cursor: pointer; font-size: 1.1em;
+      }
+      .btn-delete:hover { color: var(--christmas-red); }
+
+      .error-msg {
+        color: var(--christmas-gold);
+        background: rgba(0,0,0,0.5);
+        padding: 8px;
+        border-radius: 8px;
+        font-size: 0.9em;
+        margin-top: 10px;
+        display: none;
+        font-weight: bold;
+        border: 1px solid var(--christmas-red);
       }
 
-      /* Nút xóa nhỏ */
-      .btn-delete {
-        background: none;
-        border: none;
-        color: #666;
-        cursor: pointer;
-        font-size: 14px;
-        padding: 0 5px;
-      }
-      .btn-delete:hover {
-        color: #ff6b6b;
-      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-thumb { background: var(--christmas-gold); border-radius: 3px; }
     </style>
   </head>
   <body>
     <div class="container">
-      <h2>🚀 Remote Launcher</h2>
+      <h2>🚀 Điều khiển máy tính từ xa</h2>
 
       <div class="info-box">
         Client ID: <strong id="clientIdDisplay">...</strong>
@@ -153,18 +187,16 @@
           id="ipInput"
           placeholder="Nhập IP Server (VD: 192.168.1.10)"
         />
-        <div id="errorMsg" class="error-msg">
-          ⚠️ Không tìm thấy Server tại IP này!
-        </div>
+        <div id="errorMsg" class="error-msg"></div>
       </div>
 
       <button id="btnConnect" onclick="checkAndConnect()">KẾT NỐI</button>
 
       <div class="history-area">
         <div class="history-label">
-          Lịch sử kết nối:
+          Lịch sử:
           <small
-            style="cursor: pointer; color: #007acc"
+            style="cursor: pointer; color: var(--christmas-red)"
             onclick="clearAllHistory()"
             >(Xóa hết)</small
           >
@@ -174,162 +206,89 @@
     </div>
 
     <script>
-      // 1. Quản lý ID Client
       let clientId = localStorage.getItem("launcher_client_id");
       if (!clientId) {
-        clientId =
-          "CL_" + Math.random().toString(36).substr(2, 6).toUpperCase();
+        clientId = "CL_" + Math.random().toString(36).substr(2, 6).toUpperCase();
         localStorage.setItem("launcher_client_id", clientId);
       }
       document.getElementById("clientIdDisplay").textContent = clientId;
-
       const historyListEl = document.getElementById("historyList");
       const ipInputEl = document.getElementById("ipInput");
       const btnConnect = document.getElementById("btnConnect");
       const errorMsg = document.getElementById("errorMsg");
 
-      // 2. Hiển thị Lịch sử (kèm nút xóa)
       function loadHistory() {
         const history = JSON.parse(localStorage.getItem("ip_history") || "[]");
         historyListEl.innerHTML = "";
-
         if (history.length === 0) {
-          historyListEl.innerHTML =
-            '<div style="padding:10px;color:#666;text-align:center;font-size:0.85em">Trống</div>';
+          historyListEl.innerHTML = '<div style="padding:10px;color:rgba(255,255,255,0.5);text-align:center;font-size:0.85em">Trống</div>';
           return;
         }
-
         history.forEach((ip, index) => {
           const div = document.createElement("div");
           div.className = "history-item";
-
-          // Phần text IP (Click vào thì điền lên ô input)
           const span = document.createElement("span");
           span.textContent = ip;
-          span.onclick = () => {
-            ipInputEl.value = ip;
-            errorMsg.style.display = "none";
-          };
-
-          // Nút xóa (Click vào thì xóa IP đó)
+          span.onclick = () => { ipInputEl.value = ip; errorMsg.style.display = "none"; };
           const btnDel = document.createElement("button");
           btnDel.className = "btn-delete";
-          btnDel.innerHTML = "&#10005;"; // Dấu X
-          btnDel.onclick = (e) => {
-            e.stopPropagation(); // Chặn sự kiện click lan ra ngoài
-            deleteHistoryItem(index);
-          };
-
+          btnDel.innerHTML = "&#10005;";
+          btnDel.onclick = (e) => { e.stopPropagation(); deleteHistoryItem(index); };
           div.appendChild(span);
           div.appendChild(btnDel);
           historyListEl.appendChild(div);
         });
       }
-
-      // Xóa 1 IP cụ thể
       function deleteHistoryItem(index) {
         let history = JSON.parse(localStorage.getItem("ip_history") || "[]");
         history.splice(index, 1);
         localStorage.setItem("ip_history", JSON.stringify(history));
         loadHistory();
       }
-
-      // Xóa hết
       function clearAllHistory() {
-        if (confirm("Bạn muốn xóa toàn bộ lịch sử?")) {
+        if (confirm("Xóa lịch sử?")) {
           localStorage.removeItem("ip_history");
           loadHistory();
         }
       }
-
-      // 3. Hàm Kiểm tra và Kết Nối
       async function checkAndConnect() {
         const ip = ipInputEl.value.trim();
         errorMsg.style.display = "none";
-
-        // Regex cơ bản kiểm tra định dạng IP hoặc Domain
-        // Chấp nhận: 192.168.1.1, localhost, my-server.com
         const ipRegex = /^[\w.-]+$/;
-
-        if (!ip) {
-          showError("Vui lòng nhập IP!");
-          return;
-        }
-        if (!ipRegex.test(ip)) {
-          showError("Định dạng IP/Domain không hợp lệ!");
-          return;
-        }
-
-        // Bắt đầu kiểm tra kết nối
+        if (!ip) return showError("Vui lòng nhập IP!");
+        if (!ipRegex.test(ip)) return showError("IP không hợp lệ!");
         btnConnect.disabled = true;
-        btnConnect.innerHTML = "⏳ Đang kiểm tra Server...";
-
+        btnConnect.innerHTML = "⏳ Đang kiểm tra...";
         try {
-          // Ping tới API /ping mà ta vừa thêm ở Server
-          // Set timeout 2 giây, nếu lâu hơn coi như server chết
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 2000);
-
-          const response = await fetch(`http://${ip}:8080/ping`, {
-            method: "GET",
-            signal: controller.signal,
-          });
-
+          const response = await fetch(`http://${ip}:8080/ping`, { method: "GET", signal: controller.signal });
           clearTimeout(timeoutId);
-
-          if (response.ok) {
-            const text = await response.text();
-            if (text === "pong") {
-              // ==> KẾT NỐI THÀNH CÔNG
-              saveHistory(ip);
-              btnConnect.innerHTML = "🚀 Đang vào...";
-              btnConnect.style.background = "#28a745"; // Màu xanh lá
-
-              setTimeout(() => {
-                window.location.href = `http://${ip}:8080?importedId=${clientId}`;
-              }, 500);
-              return;
-            }
+          if (response.ok && (await response.text()) === "pong") {
+            saveHistory(ip);
+            btnConnect.innerHTML = "🚀 Đang vào...";
+            setTimeout(() => { window.location.href = `http://${ip}:8080?importedId=${clientId}`; }, 500);
+            return;
           }
-          throw new Error("Không phải Server Remote Control");
+          throw new Error("Sai Server");
         } catch (err) {
-          console.error(err);
           btnConnect.disabled = false;
           btnConnect.innerHTML = "KẾT NỐI";
           showError(`Không tìm thấy Server tại ${ip}:8080`);
         }
       }
-
       function saveHistory(ip) {
         let history = JSON.parse(localStorage.getItem("ip_history") || "[]");
-        history = history.filter((item) => item !== ip); // Xóa cũ nếu trùng
-        history.unshift(ip); // Thêm vào đầu
+        history = history.filter((item) => item !== ip);
+        history.unshift(ip);
         if (history.length > 10) history.pop();
         localStorage.setItem("ip_history", JSON.stringify(history));
         loadHistory();
       }
-
       function showError(msg) {
         errorMsg.textContent = "⚠️ " + msg;
         errorMsg.style.display = "block";
-        // Hiệu ứng rung nhẹ ô input
-        ipInputEl.style.animation = "shake 0.3s";
-        setTimeout(() => (ipInputEl.style.animation = ""), 300);
       }
-
-      // CSS animation cho hiệu ứng rung
-      const styleSheet = document.createElement("style");
-      styleSheet.innerText = `
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            50% { transform: translateX(5px); }
-            75% { transform: translateX(-5px); }
-            100% { transform: translateX(0); }
-        }
-    `;
-      document.head.appendChild(styleSheet);
-
       loadHistory();
     </script>
   </body>
