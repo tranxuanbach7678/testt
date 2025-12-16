@@ -39,7 +39,7 @@ Hệ thống cung cấp nhiều công cụ quản trị từ xa như:
 3.  **Client (Web - HTML/CSS/JS):**
     - Giao diện người dùng Single Page Application (SPA).
     - Không cần cài đặt, chạy trên mọi trình duyệt hiện đại.
-4.  **Admin Panel (Node.js) **
+4.  **Admin Panel (Node.js):**
     - Giao diện giúp máy Server quản lý các **Client** truy cập vào.
     - Hiển thị **Log** của tất cả các tiến trình giao tiếp giữa **CLient - Gateway - Server**.
 
